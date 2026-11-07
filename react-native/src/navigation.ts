@@ -63,13 +63,16 @@ function isStructure(name: string): boolean {
   return name === '__root' || /^\(.*\)$/.test(name);
 }
 
-/** An app's name for a route: a string replaces it, `null` leaves the route uncounted, `undefined` keeps it. */
-export type ScreenNamer = (route: string) => string | null | undefined;
+/**
+ * An app's name for a route: a string replaces it, `null` leaves the route uncounted, `undefined` keeps it. `route` is the
+ * automatic name; `path` the whole route, past Expo Router's root: `(tabs)/index`, `admin/job/[id]`.
+ */
+export type ScreenNamer = (route: string, path: string) => string | null | undefined;
 
-function named(name: string | undefined, namer: ScreenNamer | undefined): string | undefined {
+function named(name: string | undefined, path: string, namer: ScreenNamer | undefined): string | undefined {
   if (name === undefined || !namer) return name;
   try {
-    const given = namer(name);
+    const given = namer(name, path);
     return given === undefined ? name : given ?? undefined;
   } catch {
     return name;
@@ -100,7 +103,9 @@ export function track(
     const forward = pushed && leaf?.type !== 'tab' && leaf?.type !== 'drawer';
     lastKey = key;
     known = keys;
-    const name = named(screenName(chain.length ? chain.map((r) => r.name) : [route.name]), namer);
+    const names = chain.length ? chain.map((r) => r.name) : [route.name];
+    const path = names.filter((n) => n !== '__root').join('/');
+    const name = named(screenName(names), path, namer);
     if (name) report(name, forward);
   };
   const stops = [nav.addListener('state', check), nav.addListener('ready', check)];

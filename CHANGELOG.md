@@ -2,6 +2,11 @@
 
 One version for the four SDKs. The GitHub release of a version carries its section below.
 
+## 1.0.2
+
+React Native: `screenName` also receives the whole route (`(tabs)/index`, `admin/job/[id]`), which tells apart two screens
+called `index` and covers every route of a section. The other SDKs change only their version.
+
 ## 1.0.1
 
 React Native: the package's entry is compiled JavaScript for every tool. An app's Jest tests no longer fail with

@@ -89,14 +89,15 @@ export default function RootLayout() {
 With Expo Router the name is the route's file pattern (`product/[id]`); a folder's `index` takes the folder's name
 (`shop`).
 
-To give your screens clear names, or to leave some uncounted, pass `screenName`. A string replaces the name, `null` leaves
-the route uncounted, `undefined` keeps the automatic name:
+To give your screens clear names, or to leave some uncounted, pass `screenName`. It receives the automatic name, then the
+whole route (`(tabs)/index`, `admin/job/[id]`), which tells apart two screens called `index`. A string replaces the name,
+`null` leaves the route uncounted, `undefined` keeps the automatic name:
 
 ```tsx
-const names: Record<string, string> = { index: 'Home', 'product/[id]': 'Product' };
+const names: Record<string, string> = { '(tabs)/index': 'Home', 'product/[id]': 'Product' };
 
 Scruter.trackNavigation(ref, {
-  screenName: (route) => (route.startsWith('admin') ? null : names[route]),
+  screenName: (route, path) => (path.startsWith('admin') ? null : names[path]),
 });
 ```
 

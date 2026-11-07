@@ -68,7 +68,7 @@ public class ScruterModule extends NativeScruterSpec {
     ScruterBridge.start(
         getReactApplicationContext(),
         appId,
-        "react_native/" + (version == null ? "1.0.1" : version),
+        "react_native/" + (version == null ? "1.0.2" : version),
         text(options, "debugKey"),
         debug,
         flag(options, "testBuild"),

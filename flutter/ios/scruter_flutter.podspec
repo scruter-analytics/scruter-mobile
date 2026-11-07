@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'scruter_flutter'
-  s.version          = '1.0.1'
+  s.version          = '1.0.2'
   s.summary          = 'Scruter Analytics for Flutter: privacy-first app analytics, no IDFA, no ATT prompt, no banner.'
   s.homepage         = 'https://scruter.net'
   s.license          = { :type => 'MIT', :file => '../LICENSE' }

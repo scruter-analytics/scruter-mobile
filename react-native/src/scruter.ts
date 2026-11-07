@@ -5,7 +5,7 @@ import type { NavigationContainer, NavigationRefLike, ScreenNamer } from './navi
 import native from './specs/NativeScruter';
 
 /** The SDK's version, as batches name it (`react_native/1.0.0`). */
-export const VERSION = '1.0.1';
+export const VERSION = '1.0.2';
 
 export interface ScruterStartOptions {
   /** "App identifier" (`ATMONA02`), from App settings › SDK. */
@@ -51,7 +51,10 @@ let stopTracking: (() => void) | undefined;
 
 /** Options of `Scruter.trackNavigation`. */
 export interface ScruterNavigationOptions {
-  /** A clear name for a route: a string replaces it, `null` leaves it uncounted, `undefined` keeps the automatic one. */
+  /**
+   * A clear name for a route: a string replaces it, `null` leaves it uncounted, `undefined` keeps the automatic one. It
+   * receives the automatic name, then the whole route (`(tabs)/index`, `admin/job/[id]`).
+   */
   screenName?: ScreenNamer;
 }
 

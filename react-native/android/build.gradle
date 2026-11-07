@@ -52,6 +52,6 @@ repositories {
 dependencies {
   implementation 'com.facebook.react:react-android'
   // implementation: the app's own compiler, which can be older than the SDK's, never reads the SDK's Kotlin metadata.
-  implementation 'net.scruter:scruter-android:1.0.1'
+  implementation 'net.scruter:scruter-android:1.0.2'
   testImplementation 'junit:junit:4.13.2'
 }

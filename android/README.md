@@ -13,7 +13,7 @@ In the app module's `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("net.scruter.symbols") version "1.0.1"
+    id("net.scruter.symbols") version "1.0.2"
 }
 
 scruter {
@@ -21,7 +21,7 @@ scruter {
 }
 
 dependencies {
-    implementation("net.scruter:scruter-android:1.0.1")
+    implementation("net.scruter:scruter-android:1.0.2")
 }
 ```
 
@@ -48,7 +48,7 @@ in lower case).
 |---|---|
 | `debugKey` | a debug build becomes a team phone (see below); ignored by a release build |
 | `debug` | logs screens, events, batches and server warnings to Logcat, tag `Scruter` |
-| `testBuild` | marks a build given to testers (Google Play internal testing has no run-time signal); excluded by default in the app's settings |
+| `testBuild` | marks a build given to testers (Google Play internal testing has no run-time signal); counted, unless the app's settings exclude it |
 | `endpoint`, `apiEndpoint` | for tests |
 
 Google Play internal testing has no run-time signal, so a tester's build says so itself, for example with a build variant:

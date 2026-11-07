@@ -147,6 +147,36 @@ describe('an app naming its screens', () => {
     expect(seen).toEqual(['Home', 'Article', 'saved']);
   });
 
+  it('gives the whole route, past the root, to tell two index screens apart', () => {
+    const paths: string[] = [];
+    const seen: string[] = [];
+    let chain = ['__root', '(tabs)', 'index'];
+    const state = (names: string[], parent = ''): unknown => {
+      const [head, ...rest] = names;
+      const key = `${parent}/${head}`;
+      return { index: 0, routes: [{ key, name: head, state: rest.length ? state(rest, key) : undefined }] };
+    };
+    const listeners: Array<() => void> = [];
+    const container = {
+      isReady: () => true,
+      addListener: (_: string, l: () => void) => {
+        listeners.push(l);
+        return () => {};
+      },
+      getRootState: () => state(chain),
+    };
+    track(container as never, (name) => seen.push(name), (_, path) => {
+      paths.push(path);
+      return path.startsWith('admin') ? null : path === '(tabs)/index' ? 'Home' : undefined;
+    });
+    chain = ['__root', 'index'];
+    listeners.forEach((l) => l());
+    chain = ['__root', 'admin', 'job/[id]'];
+    listeners.forEach((l) => l());
+    expect(paths).toEqual(['(tabs)/index', 'index', 'admin/job/[id]']);
+    expect(seen).toEqual(['Home', 'index']);
+  });
+
   it('keeps the automatic name when the app\'s function throws', () => {
     const n = nav(['saved']);
     const seen: string[] = [];

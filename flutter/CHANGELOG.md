@@ -1,3 +1,7 @@
+## 1.0.2
+
+No change to the plugin: every Scruter SDK shares one version.
+
 ## 1.0.1
 
 No change to the plugin: every Scruter SDK shares one version.

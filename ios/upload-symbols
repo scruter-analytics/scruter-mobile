@@ -75,11 +75,11 @@ request() { # method url [json body file] -> body in $work/out, status printed
   method="$1"; url="$2"; body="${3:-}"
   if [ -n "$body" ]; then
     printf 'header = "Authorization: Bearer %s"\n' "$token" | curl -sS -K - -X "$method" \
-      -H 'Content-Type: application/json' -H "User-Agent: scruter-upload-symbols/1.0.1" \
+      -H 'Content-Type: application/json' -H "User-Agent: scruter-upload-symbols/1.0.2" \
       --data-binary "@$body" -o "$work/out" -w '%{http_code}' --retry 3 --retry-delay 2 "$url"
   else
     printf 'header = "Authorization: Bearer %s"\n' "$token" | curl -sS -K - -X "$method" \
-      -H "User-Agent: scruter-upload-symbols/1.0.1" -o "$work/out" -w '%{http_code}' --retry 3 --retry-delay 2 "$url"
+      -H "User-Agent: scruter-upload-symbols/1.0.2" -o "$work/out" -w '%{http_code}' --retry 3 --retry-delay 2 "$url"
   fi
 }
 
