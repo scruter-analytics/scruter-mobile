@@ -53,18 +53,19 @@ test('a manifest out of line is reported', () => {
   const sub = copyTree();
   const path = join(sub, 'Scruter.podspec');
   writeFileSync(path, readFileSync(path, 'utf8').replace(/s\.version(\s*)= '[^']+'/, "s.version$1= '0.9.0'"));
-  assert.deepEqual(problems(sub), ['Scruter.podspec: 0.9.0, VERSION says 1.0.0']);
+  assert.deepEqual(problems(sub), [`Scruter.podspec: 0.9.0, VERSION says ${readFileSync(join(sub, 'VERSION'), 'utf8').trim()}`]);
 });
 
 test('set writes every target, and only the versions', () => {
   const sub = copyTree();
   const before = readFileSync(join(sub, 'flutter/pubspec.yaml'), 'utf8');
+  const was = readFileSync(join(sub, 'VERSION'), 'utf8').trim();
   setVersion(sub, '1.2.3');
   assert.equal(readFileSync(join(sub, 'VERSION'), 'utf8'), '1.2.3\n');
   for (const target of SDK_TARGETS) {
     if (existsSync(join(sub, target.file))) assert.ok(read(sub, target).every((v) => v === '1.2.3'), target.file);
   }
-  assert.equal(readFileSync(join(sub, 'flutter/pubspec.yaml'), 'utf8'), before.replace('version: 1.0.0', 'version: 1.2.3'));
+  assert.equal(readFileSync(join(sub, 'flutter/pubspec.yaml'), 'utf8'), before.replace(`version: ${was}`, 'version: 1.2.3'));
   assert.ok(readFileSync(join(sub, 'flutter/lib/src/scruter.dart'), 'utf8').includes("'1.2.3'"));
 });
 
