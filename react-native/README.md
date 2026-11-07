@@ -89,6 +89,17 @@ export default function RootLayout() {
 With Expo Router the name is the route's file pattern (`product/[id]`); a folder's `index` takes the folder's name
 (`shop`).
 
+To give your screens clear names, or to leave some uncounted, pass `screenName`. A string replaces the name, `null` leaves
+the route uncounted, `undefined` keeps the automatic name:
+
+```tsx
+const names: Record<string, string> = { index: 'Home', 'product/[id]': 'Product' };
+
+Scruter.trackNavigation(ref, {
+  screenName: (route) => (route.startsWith('admin') ? null : names[route]),
+});
+```
+
 Without navigation: `Scruter.screen('Cart')`. Names ≤ 120 characters. Screens listed in App settings › Exclusions are not
 sent.
 

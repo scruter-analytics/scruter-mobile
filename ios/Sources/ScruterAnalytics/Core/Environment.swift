@@ -5,7 +5,7 @@ import FoundationNetworking
 #endif
 
 /// The SDK's version, sent as `sdk` (`ios/1.0.0`) and in the configuration request (`sv`).
-public let scruterSDKVersion = "1.0.0"
+public let scruterSDKVersion = "1.0.1"
 
 /// Something scheduled that can be cancelled.
 final class Scheduled {

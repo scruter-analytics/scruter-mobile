@@ -1,6 +1,6 @@
 {
   "name": "@scruter/react-native",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Scruter Analytics for React Native: privacy-first app analytics, no IDFA, no GAID, no ATT prompt, no banner.",
   "license": "MIT",
   "author": "1618 Technologies (Scruter) <contact@scruter.net>",
@@ -13,13 +13,11 @@
   "keywords": ["react-native", "expo", "analytics", "privacy", "crash-reporting"],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "react-native": "src/index.ts",
   "source": "src/index.ts",
   "bin": { "scruter": "cli/index.js" },
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
-      "react-native": "./src/index.ts",
       "default": "./lib/index.js"
     },
     "./metro": "./metro/index.js",

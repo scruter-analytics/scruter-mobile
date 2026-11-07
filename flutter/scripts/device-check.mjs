@@ -165,7 +165,7 @@ const events = batches.flatMap((b) => b.e ?? []);
 const views = batches.flatMap((b) => b.x ?? []);
 const reports = batches.flatMap((b) => b.cr ?? []);
 const raw = JSON.stringify(batches);
-expect(batches.length > 0 && batches.every((b) => b.sdk === 'flutter/1.0.0'), 'batches name the SDK flutter/1.0.0');
+expect(batches.length > 0 && batches.every((b) => b.sdk === 'flutter/1.0.1'), 'batches name the SDK flutter/1.0.1');
 const screens = events.filter((e) => e.k === 'screen').map((e) => e.n);
 console.log('     screens:', screens.join(', '));
 expect(['Home', '/product/:id', 'Checkout', 'Measure'].every((n) => screens.includes(n)), 'the screens have their route names');

@@ -49,16 +49,39 @@ function read(state: NavState | undefined): { chain: NavRoute[]; leaf?: NavState
  */
 export function screenName(chain: string[]): string | undefined {
   const last = chain[chain.length - 1];
-  if (last !== 'index') return last;
+  if (last === undefined) return undefined;
+  if (last !== 'index') return isStructure(last) ? undefined : last;
   for (let i = chain.length - 2; i >= 0; i--) {
     const name = chain[i] as string;
-    if (name !== '__root' && !/^\(.*\)$/.test(name)) return name;
+    if (!isStructure(name)) return name;
   }
   return last;
 }
 
+/** Expo Router's root and its route groups: they organise routes, no one sees them. */
+function isStructure(name: string): boolean {
+  return name === '__root' || /^\(.*\)$/.test(name);
+}
+
+/** An app's name for a route: a string replaces it, `null` leaves the route uncounted, `undefined` keeps it. */
+export type ScreenNamer = (route: string) => string | null | undefined;
+
+function named(name: string | undefined, namer: ScreenNamer | undefined): string | undefined {
+  if (name === undefined || !namer) return name;
+  try {
+    const given = namer(name);
+    return given === undefined ? name : given ?? undefined;
+  } catch {
+    return name;
+  }
+}
+
 /** Reports each focused route; returns what stops it. `report(name, forward)`: `forward` for a push, §3.9. */
-export function track(ref: NavigationRefLike, report: (name: string, forward: boolean) => void): () => void {
+export function track(
+  ref: NavigationRefLike,
+  report: (name: string, forward: boolean) => void,
+  namer?: ScreenNamer,
+): () => void {
   const nav = (('current' in ref ? ref.current : ref) ?? undefined) as NavigationContainer | undefined;
   if (!nav?.addListener) return () => {};
   let lastKey: string | undefined;
@@ -77,7 +100,7 @@ export function track(ref: NavigationRefLike, report: (name: string, forward: bo
     const forward = pushed && leaf?.type !== 'tab' && leaf?.type !== 'drawer';
     lastKey = key;
     known = keys;
-    const name = screenName(chain.length ? chain.map((r) => r.name) : [route.name]);
+    const name = named(screenName(chain.length ? chain.map((r) => r.name) : [route.name]), namer);
     if (name) report(name, forward);
   };
   const stops = [nav.addListener('state', check), nav.addListener('ready', check)];

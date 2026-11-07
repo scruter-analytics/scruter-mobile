@@ -1,11 +1,11 @@
 import { Linking, NativeEventEmitter, Platform } from 'react-native';
 import { installErrorHandler } from './errors';
 import { track as trackRoutes } from './navigation';
-import type { NavigationContainer, NavigationRefLike } from './navigation';
+import type { NavigationContainer, NavigationRefLike, ScreenNamer } from './navigation';
 import native from './specs/NativeScruter';
 
 /** The SDK's version, as batches name it (`react_native/1.0.0`). */
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.1';
 
 export interface ScruterStartOptions {
   /** "App identifier" (`ATMONA02`), from App settings › SDK. */
@@ -48,6 +48,12 @@ function route(name: string, forward: boolean) {
 }
 
 let stopTracking: (() => void) | undefined;
+
+/** Options of `Scruter.trackNavigation`. */
+export interface ScruterNavigationOptions {
+  /** A clear name for a route: a string replaces it, `null` leaves it uncounted, `undefined` keeps the automatic one. */
+  screenName?: ScreenNamer;
+}
 
 /** A callback ref, usable as `<NavigationContainer ref={Scruter.navigationRef}>`; `.current` holds the container. */
 interface NavigationRefCallback {
@@ -132,8 +138,8 @@ export const Scruter = {
   navigationRef,
 
   /** The same for a ref of your own, or Expo Router's `useNavigationContainerRef()`. Returns what stops it. */
-  trackNavigation(ref: NavigationRefLike): () => void {
-    return trackRoutes(ref, route);
+  trackNavigation(ref: NavigationRefLike, options: ScruterNavigationOptions = {}): () => void {
+    return trackRoutes(ref, route, options.screenName);
   },
 
   /** Counts a screen view, for what navigation does not show. */

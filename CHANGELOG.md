@@ -2,6 +2,15 @@
 
 One version for the four SDKs. The GitHub release of a version carries its section below.
 
+## 1.0.1
+
+React Native: the package's entry is compiled JavaScript for every tool. An app's Jest tests no longer fail with
+`Unexpected token 'export'` when they import the package, and need no `moduleNameMapper`. The other SDKs change only their
+version.
+
+React Native: `Scruter.trackNavigation(ref, { screenName })` gives routes clear names or leaves them uncounted, and Expo
+Router's root is no longer counted as a screen called `__root`.
+
 ## 1.0.0
 
 First release of Scruter Analytics for iOS, Android, React Native and Flutter: screens, events, sessions, retention,

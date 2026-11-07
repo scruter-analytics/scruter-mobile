@@ -47,7 +47,7 @@ class Client {
       headers: {
         Authorization: `Bearer ${this.token}`,
         'Content-Type': 'application/json',
-        'User-Agent': 'scruter-cli/1.0.0',
+        'User-Agent': 'scruter-cli/1.0.1',
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });

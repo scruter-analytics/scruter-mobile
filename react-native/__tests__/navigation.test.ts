@@ -110,6 +110,51 @@ describe('screenName', () => {
     expect(screenName(['__root', '(tabs)', 'shop', 'index'])).toBe('shop');
     expect(screenName(['__root', '(tabs)', 'index'])).toBe('index');
   });
+
+  it('never names what only organises routes', () => {
+    expect(screenName(['__root'])).toBeUndefined();
+    expect(screenName(['__root', '(tabs)'])).toBeUndefined();
+    expect(screenName([])).toBeUndefined();
+  });
+});
+
+describe('an app naming its screens', () => {
+  function nav(names: string[]) {
+    let at = 0;
+    const listeners: Array<() => void> = [];
+    return {
+      go(i: number) {
+        at = i;
+        listeners.forEach((l) => l());
+      },
+      container: {
+        isReady: () => true,
+        addListener: (_: string, l: () => void) => {
+          listeners.push(l);
+          return () => {};
+        },
+        getRootState: () => ({ index: 0, routes: [{ key: names[at], name: names[at] as string }] }),
+      },
+    };
+  }
+
+  it('replaces a name, leaves a route uncounted, keeps the others', () => {
+    const n = nav(['index', 'admin', 'article/[slug]', 'saved']);
+    const seen: string[] = [];
+    const names: Record<string, string | null> = { index: 'Home', admin: null, 'article/[slug]': 'Article' };
+    track(n.container as never, (name) => seen.push(name), (route) => names[route]);
+    [1, 2, 3].forEach((i) => n.go(i));
+    expect(seen).toEqual(['Home', 'Article', 'saved']);
+  });
+
+  it('keeps the automatic name when the app\'s function throws', () => {
+    const n = nav(['saved']);
+    const seen: string[] = [];
+    track(n.container as never, (name) => seen.push(name), () => {
+      throw new Error('no');
+    });
+    expect(seen).toEqual(['saved']);
+  });
 });
 
 describe('Scruter.navigationRef', () => {

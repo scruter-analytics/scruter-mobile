@@ -104,7 +104,7 @@ Map<String, Object?> batchOf({
       'a': 'ATMONA02',
       'b': '0' * 32,
       't': 1762345678901,
-      'sdk': 'flutter/1.0.0',
+      'sdk': 'flutter/1.0.1',
       's': [
         {
           'id': session,
