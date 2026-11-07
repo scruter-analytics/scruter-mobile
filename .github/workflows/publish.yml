@@ -1,0 +1,289 @@
+# Publishes the four SDKs from a tag `v<version>` (docs/RUNBOOK.md of the Scruter monorepo, « Publishing the mobile
+# SDKs »): every SDK's checks, then Maven Central and the Gradle Plugin Portal, npm and pub.dev. A failed job stops the
+# next ones; a rerun skips what a registry already has, because a published version is immutable. The bare tag and the
+# GitHub release follow by hand, once this run is green: they are in the owner's name, not the workflow's.
+#
+# Everything but a tag `v<VERSION>` is a dry run: the same jobs without the upload. The secrets reach only the steps
+# that use them. Third-party actions are pinned by commit in this file, the only one that sees the secrets.
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+    branches: ["wip/publish"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Everything but the upload
+        type: boolean
+        default: true
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SIGNING_FINGERPRINT: 3BDEE583E8C3BD91800986FBC2F008320316D8D7
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.mode.outputs.version }}
+      dry_run: ${{ steps.mode.outputs.dry_run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: The release scripts
+        run: |
+          python3 -m unittest discover -s scripts/tests
+          node --test scripts/tests/version.test.mjs
+      - name: Every manifest says VERSION
+        run: |
+          test -f react-native/package.json
+          node scripts/version.mjs check
+      - name: Dry run or publication
+        id: mode
+        env:
+          EVENT: ${{ github.event_name }}
+          DRY_RUN_INPUT: ${{ inputs.dry_run }}
+        run: |
+          version=$(cat VERSION)
+          dry_run=$(python3 scripts/release.py mode "$EVENT" "$GITHUB_REF" "$DRY_RUN_INPUT" "$version")
+          if [ "$dry_run" = false ]; then
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main ||
+              { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
+          echo "### Version $version, dry run: $dry_run" >> "$GITHUB_STEP_SUMMARY"
+
+  checks-ios:
+    needs: prepare
+    uses: ./.github/workflows/ios.yml
+
+  checks-android:
+    needs: prepare
+    uses: ./.github/workflows/android.yml
+
+  checks-flutter:
+    needs: prepare
+    uses: ./.github/workflows/flutter.yml
+
+  checks-react-native:
+    needs: prepare
+    uses: ./.github/workflows/react-native.yml
+
+  android:
+    needs: [prepare, checks-ios, checks-android, checks-flutter, checks-react-native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-disabled: true # no build cache next to the signing key
+      - name: What the registries already have
+        id: published
+        env:
+          CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: |
+          central=$(python3 scripts/release.py published central "$VERSION")
+          portal=$(python3 scripts/release.py published portal "$VERSION")
+          echo "central=$central" >> "$GITHUB_OUTPUT"
+          echo "portal=$portal" >> "$GITHUB_OUTPUT"
+          echo "Maven Central has $VERSION: $central; the Gradle Plugin Portal has it: $portal" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Signed artifacts
+        if: steps.published.outputs.central != 'true'
+        working-directory: android
+        env:
+          SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+        run: |
+          ./gradlew --no-daemon --max-workers=3 --console=plain :scruter-android:publishReleasePublicationToStagingRepository
+          ./gradlew --no-daemon --max-workers=3 --console=plain -p scruter-symbols-gradle-plugin publishAllPublicationsToStagingRepository
+      - name: The key Maven Central reads
+        if: steps.published.outputs.central != 'true'
+        run: |
+          curl -fsS --retry 5 --retry-all-errors \
+            "https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&search=0x$SIGNING_FINGERPRINT" | gpg --batch --import
+      - name: What Maven Central checks
+        if: steps.published.outputs.central != 'true'
+        run: python3 scripts/release.py central-verify android/build/staging "$VERSION"
+      - name: The bundle
+        if: steps.published.outputs.central != 'true'
+        run: python3 scripts/release.py central-bundle android/build/staging "$RUNNER_TEMP/scruter-mobile-$VERSION.zip"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.published.outputs.central != 'true'
+        with:
+          name: maven-central-bundle
+          path: ${{ runner.temp }}/scruter-mobile-${{ env.VERSION }}.zip
+          retention-days: 7
+      - name: Maven Central
+        if: steps.published.outputs.central != 'true' && env.DRY_RUN == 'false'
+        env:
+          CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        run: python3 scripts/release.py central-upload "$RUNNER_TEMP/scruter-mobile-$VERSION.zip" "scruter-mobile-$VERSION"
+      # A first version waits for the Portal's review: it is uploaded but not served yet, and a rerun finds it there.
+      - name: Gradle Plugin Portal
+        if: steps.published.outputs.portal != 'true'
+        working-directory: android
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+          SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+        run: |
+          validate=()
+          if [ "$DRY_RUN" != false ]; then validate=(--validate-only); fi
+          status=0
+          ./gradlew --no-daemon --max-workers=3 --console=plain -p scruter-symbols-gradle-plugin publishPlugins "${validate[@]}" \
+            2>&1 | tee "$RUNNER_TEMP/portal.log" || status=$?
+          if [ "$status" != 0 ] && grep -Eqi 'already (exists|been published|published)' "$RUNNER_TEMP/portal.log"; then
+            echo "The Gradle Plugin Portal already has $VERSION"
+            status=0
+          fi
+          exit "$status"
+
+  react-native:
+    needs: [prepare, android]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+    defaults:
+      run:
+        working-directory: react-native
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - name: What npm already has
+        id: published
+        run: |
+          npm=$(python3 ../scripts/release.py published npm "$VERSION")
+          echo "npm=$npm" >> "$GITHUB_OUTPUT"
+          echo "npm has $VERSION: $npm" | tee -a "$GITHUB_STEP_SUMMARY"
+      # The package is built before the token enters the job's steps, and uploaded without running a script.
+      - name: The package, with the iOS sources
+        if: steps.published.outputs.npm != 'true'
+        run: |
+          npm ci --no-audit --no-fund
+          npm pack --pack-destination "$RUNNER_TEMP"
+          tarball="$RUNNER_TEMP/scruter-react-native-$VERSION.tgz"
+          tar -tzf "$tarball" > "$RUNNER_TEMP/files.txt"
+          for file in lib/index.js src/index.ts ios/sdk/ScruterAnalytics/Scruter.swift ios/sdk/ScruterCrash/include/ScruterCrash.h \
+            ios/sdk/ScruterAnalytics/PrivacyInfo.xcprivacy ios/sdk/upload-symbols ScruterReactNative.podspec cli/index.js; do
+            grep -qx "package/$file" "$RUNNER_TEMP/files.txt" || { echo "::error::$file is not in the package"; exit 1; }
+          done
+          test "$(tar -xzOf "$tarball" package/package.json | node -p 'JSON.parse(require("fs").readFileSync(0)).version')" = "$VERSION"
+      - name: npm
+        if: steps.published.outputs.npm != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          dry=()
+          if [ "$DRY_RUN" != false ]; then
+            dry=(--dry-run)
+            account=$(npm whoami)
+            echo "npm account: $account"
+          fi
+          npm publish "$RUNNER_TEMP/scruter-react-native-$VERSION.tgz" --access public --ignore-scripts "${dry[@]}"
+
+  flutter:
+    needs: [prepare, react-native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # pub.dev's automated publishing
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: What pub.dev already has
+        id: published
+        run: |
+          pub=$(python3 ../scripts/release.py published pub "$VERSION")
+          echo "pub=$pub" >> "$GITHUB_OUTPUT"
+          echo "pub.dev has $VERSION: $pub" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ "$pub" != true ] && [ "$DRY_RUN" = false ] && [ "$(python3 ../scripts/release.py pub-package-exists)" = false ]; then
+            echo "::error::The first version of scruter_flutter is published by hand, from this tag: flutter/scripts/sync-ios-sources.sh, then dart pub login and dart pub publish in flutter/. Move the package to the publisher scruter.net, enable automated publishing on its Admin page, and rerun the failed jobs."
+            exit 1
+          fi
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        if: steps.published.outputs.pub != 'true'
+        with:
+          channel: stable
+      - name: The package, with the iOS sources
+        if: steps.published.outputs.pub != 'true'
+        run: |
+          scripts/sync-ios-sources.sh
+          scripts/sync-ios-sources.sh --check
+          flutter pub get
+      - name: pub.dev validation
+        if: steps.published.outputs.pub != 'true'
+        run: |
+          dart pub publish --dry-run 2>&1 | tee "$RUNNER_TEMP/pub.log"
+          grep -q 'ScruterAnalytics' "$RUNNER_TEMP/pub.log" || { echo "::error::ios/vendor is not in the package"; exit 1; }
+          grep -q 'Package has 0 warnings' "$RUNNER_TEMP/pub.log" || { echo "::error::pub.dev validation has warnings"; exit 1; }
+      # The token lives five minutes: asked for here, as the upload starts. A dry run proves it can be had.
+      - name: pub.dev
+        if: steps.published.outputs.pub != 'true'
+        run: |
+          PUB_TOKEN=$(curl -fsS -G -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            --data-urlencode "audience=https://pub.dev" "$ACTIONS_ID_TOKEN_REQUEST_URL" |
+            python3 -c 'import json, sys; print(json.load(sys.stdin)["value"])')
+          echo "::add-mask::$PUB_TOKEN"
+          export PUB_TOKEN
+          dart pub token add https://pub.dev --env-var PUB_TOKEN
+          if [ "$DRY_RUN" = false ]; then dart pub publish --force; fi
+
+  # The last gate: a green run is what scripts/sdk-mirror.sh release asks for.
+  release:
+    needs: [prepare, flutter]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The notes
+        run: python3 scripts/release.py notes "$VERSION" | tee -a "$GITHUB_STEP_SUMMARY"

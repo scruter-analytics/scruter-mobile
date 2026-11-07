@@ -1,0 +1,183 @@
+{
+  "description": "An analysed screen view (taps with a dead tap and a rage burst, scroll bands, a form with two fields). Stored in aa_pageviews (1), aa_clicks (3), aa_forms (1), aa_form_fields (2) when the app collects Analyse avancée.",
+  "schema": "batch",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH}}",
+          "t": "{{NOW}}",
+          "sdk": "ios/1.0.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 1,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 0,
+              "p": "ios",
+              "bid": "fr.scruter.conformance",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "18.2",
+              "m": "iPhone16,2",
+              "f": "phone",
+              "l": "fr",
+              "o": {
+                "k": "icon"
+              },
+              "c": {
+                "sv": 2,
+                "ev": 1,
+                "dur": 95,
+                "en": "Accueil",
+                "ex": "Fiche produit",
+                "rev": {
+                  "EUR": 3400
+                },
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-20000}}"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Accueil",
+              "t": "{{NOW-110000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen_end",
+              "n": "Accueil",
+              "t": "{{NOW-60000}}",
+              "ms": 48000,
+              "sc": 60
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Fiche produit",
+              "t": "{{NOW-59000}}"
+            }
+          ],
+          "x": [
+            {
+              "s": "{{SESSION}}",
+              "k": 4123456789012345,
+              "q": 1,
+              "n": "Fiche produit",
+              "t": "{{NOW-59000}}",
+              "vw": 393,
+              "vh": 852,
+              "ch": 2140,
+              "sd": 80,
+              "dt": 42000,
+              "et": 30500,
+              "ia": 1,
+              "at": [
+                1200,
+                800,
+                0,
+                300
+              ],
+              "cn": 3,
+              "cd": 1,
+              "cr": 1,
+              "c": [
+                [
+                  "#gallery/Image",
+                  0,
+                  "image",
+                  48,
+                  52,
+                  3120,
+                  1
+                ],
+                [
+                  "#add_to_cart",
+                  0,
+                  "button",
+                  50,
+                  40,
+                  9000,
+                  0
+                ],
+                [
+                  "#colors/ChipView",
+                  2,
+                  "choice",
+                  12,
+                  70,
+                  12000,
+                  2
+                ]
+              ],
+              "f": [
+                {
+                  "s": "Livraison",
+                  "i": 0,
+                  "v": 1,
+                  "b": 1,
+                  "ok": 0,
+                  "rf": 0,
+                  "ms": 0,
+                  "lf": "postalCode",
+                  "fd": [
+                    [
+                      "givenName",
+                      "text",
+                      1,
+                      0,
+                      1,
+                      2100,
+                      0,
+                      0,
+                      1
+                    ],
+                    [
+                      "postalCode",
+                      "text",
+                      1,
+                      3,
+                      2,
+                      9200,
+                      1,
+                      2,
+                      1
+                    ]
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    }
+  ],
+  "stored": {
+    "aa_pageviews": 1,
+    "aa_clicks": 3,
+    "aa_forms": 1,
+    "aa_form_fields": 2
+  }
+}

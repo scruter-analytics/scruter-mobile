@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scruter.net/schemas/mobile/v1/batch.schema.json",
+  "title": "POST /m/v1/batch",
+  "description": "docs/API.md §5.3, docs/MOBILE.md §3–§6. What a conforming SDK sends: the server is lenient (it clamps strings and drops bad items), the schema is strict.",
+  "type": "object",
+  "required": ["v", "a", "b", "t", "s"],
+  "properties": {
+    "v": {"const": 1},
+    "a": {"$ref": "#/$defs/app_id"},
+    "b": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "t": {"$ref": "#/$defs/ms"},
+    "sdk": {"type": "string", "pattern": "^(ios|android|react_native|flutter)/[0-9A-Za-z.+-]{1,30}$"},
+    "ce": {"type": "string", "maxLength": 64},
+    "dbg": {"enum": [0, 1]},
+    "s": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"$ref": "#/$defs/session"}},
+    "e": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/event"}},
+    "x": {"type": "array", "maxItems": 20, "items": {"$ref": "#/$defs/screen_view"}},
+    "cr": {"type": "array", "maxItems": 5, "items": {"$ref": "#/$defs/crash"}}
+  },
+  "$defs": {
+    "app_id": {"type": "string", "pattern": "^[A-Z0-9_-]{1,32}$"},
+    "ms": {"type": "integer", "minimum": 1000000000000, "maximum": 9999999999999},
+    "session_id": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 120},
+    "state": {
+      "type": "object",
+      "required": ["sv", "ev", "dur", "last"],
+      "properties": {
+        "sv": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "ev": {"type": "integer", "minimum": 0, "maximum": 100000},
+        "dur": {"type": "integer", "minimum": 0, "maximum": 86400},
+        "en": {"type": "string", "maxLength": 120},
+        "ex": {"type": "string", "maxLength": 120},
+        "rev": {"type": "object", "maxProperties": 10, "propertyNames": {"pattern": "^[A-Z]{3}$"}, "additionalProperties": {"type": "integer", "minimum": -100000000000, "maximum": 100000000000}},
+        "cr": {"enum": [0, 1]},
+        "anr": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "last": {"$ref": "#/$defs/ms"}
+      }
+    },
+    "session": {
+      "type": "object",
+      "required": ["id", "d", "q", "st", "p", "av", "bk", "os", "m", "f", "c"],
+      "properties": {
+        "id": {"$ref": "#/$defs/session_id"},
+        "d": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+        "q": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "st": {"$ref": "#/$defs/ms"},
+        "i": {"type": "string", "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$"},
+        "n": {"enum": [0, 1]},
+        "p": {"enum": ["ios", "android"]},
+        "bid": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z0-9_-]+)+$", "maxLength": 155},
+        "av": {"type": "string", "minLength": 1, "maxLength": 40},
+        "ab": {"type": "string", "maxLength": 40},
+        "bk": {"enum": ["release", "testflight", "test", "debug"]},
+        "tm": {"enum": [0, 1]},
+        "os": {"type": "string", "minLength": 1, "maxLength": 20},
+        "m": {"type": "string", "minLength": 1, "maxLength": 60},
+        "f": {"enum": ["phone", "tablet"]},
+        "l": {"type": "string", "pattern": "^[a-z]{2}$"},
+        "o": {
+          "type": "object",
+          "required": ["k"],
+          "properties": {
+            "k": {"enum": ["icon", "notification", "link", "widget", "shortcut", "other"]},
+            "u": {"type": "string", "maxLength": 2000},
+            "r": {"type": "string", "maxLength": 200}
+          }
+        },
+        "ins": {
+          "type": "object",
+          "required": ["src"],
+          "properties": {
+            "src": {"enum": ["app_store", "testflight", "google_play", "other"]},
+            "ref": {"type": "string", "maxLength": 2000},
+            "cp": {"type": "string", "maxLength": 300}
+          }
+        },
+        "c": {"$ref": "#/$defs/state"},
+        "pv": {"$ref": "#/$defs/state"}
+      }
+    },
+    "props": {
+      "type": "object",
+      "maxProperties": 30,
+      "propertyNames": {"minLength": 1, "maxLength": 300},
+      "additionalProperties": {"type": ["string", "number", "boolean"]}
+    },
+    "event": {
+      "type": "object",
+      "required": ["s", "k", "n", "t"],
+      "properties": {
+        "s": {"$ref": "#/$defs/session_id"},
+        "k": {"enum": ["screen", "screen_end", "event"]},
+        "n": {"$ref": "#/$defs/name"},
+        "t": {"$ref": "#/$defs/ms"},
+        "ms": {"type": "integer", "minimum": 0, "maximum": 86400000},
+        "sc": {"type": "integer", "minimum": 0, "maximum": 100, "multipleOf": 5},
+        "p": {"$ref": "#/$defs/props"},
+        "$": {
+          "type": "object",
+          "required": ["a", "c"],
+          "properties": {"a": {"type": "number"}, "c": {"type": "string", "pattern": "^[A-Z]{3}$"}}
+        }
+      }
+    },
+    "screen_view": {
+      "type": "object",
+      "required": ["s", "k", "q", "n", "t"],
+      "properties": {
+        "s": {"$ref": "#/$defs/session_id"},
+        "k": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "q": {"type": "integer", "minimum": 1, "maximum": 10},
+        "n": {"$ref": "#/$defs/name"},
+        "t": {"$ref": "#/$defs/ms"},
+        "vw": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "vh": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "ch": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "sd": {"type": "integer", "minimum": 0, "maximum": 100, "multipleOf": 5},
+        "dt": {"type": "integer", "minimum": 0, "maximum": 86400000},
+        "et": {"type": "integer", "minimum": 0, "maximum": 86400000},
+        "ia": {"enum": [0, 1]},
+        "at": {"type": "array", "maxItems": 50, "items": {"type": "integer", "minimum": 0, "maximum": 86400000}},
+        "cn": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "cd": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "cr": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "c": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "array",
+            "minItems": 7,
+            "maxItems": 7,
+            "prefixItems": [
+              {"type": "string", "minLength": 1, "maxLength": 200},
+              {"type": "integer", "minimum": 0, "maximum": 9999},
+              {"enum": ["button", "link", "input", "choice", "tab", "cell", "image", "media", "text", "other"]},
+              {"type": "integer", "minimum": 0, "maximum": 100},
+              {"type": "integer", "minimum": 0, "maximum": 100},
+              {"type": "integer", "minimum": 0, "maximum": 86400000},
+              {"type": "integer", "minimum": 0, "maximum": 3}
+            ]
+          }
+        },
+        "f": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "required": ["s", "i", "v", "b", "ok"],
+            "properties": {
+              "s": {"type": "string", "maxLength": 120},
+              "i": {"type": "integer", "minimum": 0, "maximum": 65535},
+              "v": {"enum": [0, 1]},
+              "b": {"enum": [0, 1]},
+              "ok": {"enum": [0, 1]},
+              "rf": {"type": "integer", "minimum": 0, "maximum": 65535},
+              "ms": {"type": "integer", "minimum": 0, "maximum": 86400000},
+              "lf": {"type": "string", "maxLength": 100},
+              "fd": {
+                "type": "array",
+                "maxItems": 40,
+                "items": {
+                  "type": "array",
+                  "minItems": 9,
+                  "maxItems": 9,
+                  "prefixItems": [
+                    {"type": "string", "minLength": 1, "maxLength": 100},
+                    {"type": "string", "maxLength": 30},
+                    {"enum": [0, 1]},
+                    {"type": "integer", "minimum": 0, "maximum": 255},
+                    {"type": "integer", "minimum": 0, "maximum": 65535},
+                    {"type": "integer", "minimum": 0, "maximum": 86400000},
+                    {"type": "integer", "minimum": 0, "maximum": 65535},
+                    {"type": "integer", "minimum": 0, "maximum": 15},
+                    {"enum": [0, 1]}
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "frame": {
+      "type": "object",
+      "properties": {
+        "a": {"type": "string", "pattern": "^0x[0-9a-fA-F]{1,16}$"},
+        "i": {"type": "integer", "minimum": 0, "maximum": 99},
+        "fn": {"type": "string", "maxLength": 200},
+        "cl": {"type": "string", "maxLength": 200},
+        "fl": {"type": "string", "maxLength": 200},
+        "l": {"type": "integer", "minimum": 0},
+        "co": {"type": "integer", "minimum": 0},
+        "ia": {"enum": [0, 1]}
+      }
+    },
+    "crash": {
+      "type": "object",
+      "required": ["s", "id", "t", "k", "src", "ex", "th"],
+      "properties": {
+        "s": {"$ref": "#/$defs/session_id"},
+        "id": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "t": {"$ref": "#/$defs/ms"},
+        "k": {"enum": ["crash", "anr", "nonfatal"]},
+        "src": {"enum": ["native", "js", "dart"]},
+        "ex": {
+          "type": "object",
+          "properties": {
+            "type": {"type": "string", "maxLength": 200},
+            "code": {"type": "string", "maxLength": 200},
+            "sig": {"type": "string", "maxLength": 20},
+            "reason": {"type": "string", "maxLength": 200}
+          }
+        },
+        "th": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["f"],
+            "properties": {
+              "c": {"enum": [0, 1]},
+              "m": {"enum": [0, 1]},
+              "f": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"$ref": "#/$defs/frame"}}
+            }
+          }
+        },
+        "img": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "required": ["n"],
+            "properties": {
+              "n": {"type": "string", "minLength": 1, "maxLength": 200},
+              "u": {"type": "string", "maxLength": 100},
+              "la": {"type": "string", "pattern": "^0x[0-9a-fA-F]{1,16}$"},
+              "ar": {"type": "string", "maxLength": 20}
+            }
+          }
+        },
+        "map": {"type": "string", "maxLength": 100},
+        "bun": {"type": "string", "maxLength": 100},
+        "bld": {"type": "string", "maxLength": 100},
+        "bc": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "required": ["k", "n"],
+            "properties": {
+              "k": {"enum": ["screen", "event"]},
+              "n": {"$ref": "#/$defs/name"},
+              "t": {"$ref": "#/$defs/ms"}
+            }
+          }
+        },
+        "scr": {"type": "string", "maxLength": 120},
+        "fg": {"enum": [0, 1]},
+        "up": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

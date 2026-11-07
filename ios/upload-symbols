@@ -1,0 +1,166 @@
+#!/bin/sh
+# Scruter Analytics: uploads the dSYMs of an iOS build so that crash reports become readable
+# (docs/MOBILE.md §4.3: POST /m/v1/symbols/missing, POST /m/v1/symbols, PUT to the presigned URL, POST …/complete).
+#
+# Xcode "Run Script" build phase (Swift Package Manager):
+#   "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/scruter-mobile/ios/upload-symbols" --app ATMONA02
+# CocoaPods:
+#   "${PODS_ROOT}/Scruter/ios/upload-symbols" --app ATMONA02
+# The token comes from the environment, never from the project: SCRUTER_UPLOAD_TOKEN=scr_up_… (App settings › SDK,
+# kept in your CI's secrets). Add "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}" as the phase's input file.
+#
+# Usage: upload-symbols --app APP_ID [--api https://api.scruter.net] [--force] [--strict] [PATH…]
+#   PATH       .dSYM bundles or folders holding them (default: $DWARF_DSYM_FOLDER_PATH)
+#   --force    also on simulator and Debug builds (skipped by default: nobody ships them)
+#   --strict   fail the build on an error (default: warn and go on, a build never fails for symbols)
+set -u
+
+app=""
+api="${SCRUTER_API:-https://api.scruter.net}"
+force=0
+strict=0
+paths=""
+
+warn() { echo "warning: Scruter: $*" >&2; }
+fail() {
+  if [ "$strict" = 1 ]; then
+    echo "error: Scruter: $*" >&2
+    exit 1
+  fi
+  warn "$*"
+  exit 0
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app) app="${2:-}"; shift 2 ;;
+    --api) api="${2:-}"; shift 2 ;;
+    --force) force=1; shift ;;
+    --strict) strict=1; shift ;;
+    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
+    *) paths="$paths
+$1"; shift ;;
+  esac
+done
+
+[ -n "$app" ] || fail "--app is required (App identifier, e.g. ATMONA02)"
+case "$app" in *[!A-Z0-9_-]*) fail "--app $app is not an app id" ;; esac
+token="${SCRUTER_UPLOAD_TOKEN:-}"
+[ -n "$token" ] || fail "SCRUTER_UPLOAD_TOKEN is not set: dSYMs not uploaded (App settings › SDK › Create a token)"
+case "$token" in scr_up_*) ;; *) fail "SCRUTER_UPLOAD_TOKEN is not an upload token (scr_up_…)" ;; esac
+
+if [ "$force" = 0 ]; then
+  case "${PLATFORM_NAME:-}" in *simulator) echo "Scruter: simulator build, dSYMs not uploaded"; exit 0 ;; esac
+  if [ "${CONFIGURATION:-}" = "Debug" ]; then echo "Scruter: Debug build, dSYMs not uploaded"; exit 0; fi
+fi
+if [ -z "$paths" ]; then
+  [ -n "${DWARF_DSYM_FOLDER_PATH:-}" ] || fail "no path given and DWARF_DSYM_FOLDER_PATH is not set"
+  paths="$DWARF_DSYM_FOLDER_PATH"
+fi
+
+# The app's version and build: Xcode's settings, else the built Info.plist.
+version="${MARKETING_VERSION:-}"
+build="${CURRENT_PROJECT_VERSION:-}"
+if [ -n "${BUILT_PRODUCTS_DIR:-}" ] && [ -n "${INFOPLIST_PATH:-}" ] && [ -f "$BUILT_PRODUCTS_DIR/$INFOPLIST_PATH" ]; then
+  plist="$BUILT_PRODUCTS_DIR/$INFOPLIST_PATH"
+  [ -n "$version" ] || version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist" 2>/dev/null || true)
+  [ -n "$build" ] || build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist" 2>/dev/null || true)
+fi
+
+work=$(mktemp -d "${TMPDIR:-/tmp}/scruter-symbols.XXXXXX") || fail "no temporary directory"
+trap 'rm -rf "$work"' EXIT
+
+# Requests: the token goes through curl's configuration on stdin, never on a command line.
+request() { # method url [json body file] -> body in $work/out, status printed
+  method="$1"; url="$2"; body="${3:-}"
+  if [ -n "$body" ]; then
+    printf 'header = "Authorization: Bearer %s"\n' "$token" | curl -sS -K - -X "$method" \
+      -H 'Content-Type: application/json' -H "User-Agent: scruter-upload-symbols/1.0.0" \
+      --data-binary "@$body" -o "$work/out" -w '%{http_code}' --retry 3 --retry-delay 2 "$url"
+  else
+    printf 'header = "Authorization: Bearer %s"\n' "$token" | curl -sS -K - -X "$method" \
+      -H "User-Agent: scruter-upload-symbols/1.0.0" -o "$work/out" -w '%{http_code}' --retry 3 --retry-delay 2 "$url"
+  fi
+}
+
+json_string() { # a JSON string literal (the values here are UUIDs, versions and file names)
+  printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr -d '\000-\037')"
+}
+
+extract() { # keypath file -> raw value, empty when absent (plutil prints its errors on stdout)
+  value=$(plutil -extract "$1" raw -o - "$2" 2>/dev/null) && printf '%s' "$value"
+}
+
+# 1. Every dSYM, its UUIDs and architectures.
+: > "$work/uuids"
+echo "$paths" | while IFS= read -r p; do
+  [ -n "$p" ] || continue
+  find "$p" -maxdepth 3 -name '*.dSYM' -type d 2>/dev/null
+done | sort -u > "$work/dsyms"
+[ -s "$work/dsyms" ] || fail "no .dSYM found (set DEBUG_INFORMATION_FORMAT = dwarf-with-dsym for Release)"
+while IFS= read -r dsym; do
+  xcrun dwarfdump --uuid "$dsym" 2>/dev/null | while read -r _ uuid arch _rest; do
+    arch=$(printf '%s' "$arch" | tr -d '()')
+    printf '%s\t%s\t%s\n' "$uuid" "$arch" "$dsym"
+  done
+done < "$work/dsyms" > "$work/uuids"
+[ -s "$work/uuids" ] || fail "no UUID in the dSYMs"
+
+# 2. Which ones the server is missing (≤ 200 per request).
+: > "$work/missing"
+split -l 200 "$work/uuids" "$work/chunk."
+for chunk in "$work"/chunk.*; do
+  {
+    printf '{"app":%s,"files":[' "$(json_string "$app")"
+    sep=""
+    while IFS="$(printf '\t')" read -r uuid _arch _dsym; do
+      printf '%s{"kind":"dsym","debug_id":%s}' "$sep" "$(json_string "$uuid")"
+      sep=","
+    done < "$chunk"
+    printf ']}'
+  } > "$work/body.json"
+  status=$(request POST "$api/m/v1/symbols/missing" "$work/body.json") || fail "network error"
+  [ "$status" = 200 ] || fail "symbols/missing answered HTTP $status"
+  i=0
+  while [ "$i" -lt 200 ]; do
+    id=$(extract "missing.$i.debug_id" "$work/out")
+    [ -n "$id" ] || break
+    echo "$id" >> "$work/missing"
+    i=$((i + 1))
+  done
+done
+if [ ! -s "$work/missing" ]; then
+  echo "Scruter: the server already has these dSYMs"
+  exit 0
+fi
+
+# 3. Upload each missing one: create, PUT the zipped dSYM, complete.
+uploaded=0
+while IFS="$(printf '\t')" read -r uuid arch dsym; do
+  grep -qix "$uuid" "$work/missing" || continue
+  zip="$work/$(basename "$dsym").zip"
+  [ -f "$zip" ] || ditto -c -k --keepParent "$dsym" "$zip" || fail "cannot zip $dsym"
+  size=$(stat -f%z "$zip")
+  sha=$(shasum -a 256 "$zip" | cut -d' ' -f1)
+  {
+    printf '{"app":%s,"platform":"ios","kind":"dsym","debug_id":%s' "$(json_string "$app")" "$(json_string "$uuid")"
+    [ -n "$version" ] && printf ',"app_version":%s' "$(json_string "$version")"
+    [ -n "$build" ] && printf ',"build":%s' "$(json_string "$build")"
+    [ -n "$arch" ] && printf ',"arch":%s' "$(json_string "$arch")"
+    printf ',"file_name":%s,"size":%s,"sha256":"%s"}' "$(json_string "$(basename "$zip")")" "$size" "$sha"
+  } > "$work/body.json"
+  status=$(request POST "$api/m/v1/symbols" "$work/body.json") || fail "network error"
+  if [ "$status" = 409 ]; then continue; fi
+  [ "$status" = 201 ] || fail "symbols answered HTTP $status for $uuid"
+  cp "$work/out" "$work/created.json"
+  file_id=$(extract id "$work/created.json")
+  url=$(extract upload.url "$work/created.json")
+  ctype=$(extract upload.headers.Content-Type "$work/created.json")
+  [ -n "$file_id" ] && [ -n "$url" ] || fail "unexpected answer to POST /m/v1/symbols"
+  put=$(curl -sS -X PUT -H "Content-Type: ${ctype:-application/octet-stream}" --upload-file "$zip" \
+    -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 2 "$url") || fail "upload of $uuid failed"
+  case "$put" in 2*) ;; *) fail "upload of $uuid answered HTTP $put" ;; esac
+  status=$(request POST "$api/m/v1/symbols/$file_id/complete") || fail "network error"
+  case "$status" in 2*) uploaded=$((uploaded + 1)) ;; *) fail "complete answered HTTP $status for $uuid" ;; esac
+done < "$work/uuids"
+echo "Scruter: $uploaded dSYM file(s) uploaded for $app ${version:+$version }${build:+($build)}"

@@ -1,0 +1,158 @@
+{
+  "description": "Two states of one session: q = 1, then q = 2 with the acknowledged state in `pv`. The cancel row and the new row collapse to one session of 3 screen views.",
+  "schema": "batch",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH}}",
+          "t": "{{NOW}}",
+          "sdk": "ios/1.0.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 1,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 0,
+              "p": "ios",
+              "bid": "fr.scruter.conformance",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "18.2",
+              "m": "iPhone16,2",
+              "f": "phone",
+              "l": "fr",
+              "o": {
+                "k": "icon"
+              },
+              "c": {
+                "sv": 1,
+                "ev": 0,
+                "dur": 30,
+                "en": "Accueil",
+                "ex": "Accueil",
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-90000}}"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Accueil",
+              "t": "{{NOW-110000}}"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH2}}",
+          "t": "{{NOW}}",
+          "sdk": "ios/1.0.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 2,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 0,
+              "p": "ios",
+              "bid": "fr.scruter.conformance",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "18.2",
+              "m": "iPhone16,2",
+              "f": "phone",
+              "l": "fr",
+              "o": {
+                "k": "icon"
+              },
+              "c": {
+                "sv": 3,
+                "ev": 0,
+                "dur": 80,
+                "en": "Accueil",
+                "ex": "Panier",
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-10000}}"
+              },
+              "pv": {
+                "sv": 1,
+                "ev": 0,
+                "dur": 30,
+                "en": "Accueil",
+                "ex": "Accueil",
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-90000}}"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Boutique",
+              "t": "{{NOW-50000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Panier",
+              "t": "{{NOW-15000}}"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    }
+  ],
+  "stored": {
+    "events_pageview": 3,
+    "sessions_sum_sign": 1,
+    "session": {
+      "pageviews": 3,
+      "duration": 80,
+      "exit_page": "Panier"
+    }
+  }
+}

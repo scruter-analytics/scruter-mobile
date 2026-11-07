@@ -1,0 +1,41 @@
+// The plugin's native side, in Java on purpose: it builds with whatever Kotlin version the app uses.
+group 'net.scruter.flutter'
+version '1.0.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    if (project.android.hasProperty('namespace')) {
+        namespace 'net.scruter.flutter'
+    }
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 24
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation 'net.scruter:scruter-android:1.0.0'
+}

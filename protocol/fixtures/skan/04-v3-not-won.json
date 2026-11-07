@@ -1,0 +1,33 @@
+{
+  "description": "SKAdNetwork 3.0 non-winning postback (Apple's example): valid but not stored (copies count wins only).",
+  "schema": null,
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/.well-known/skadnetwork/report-attribution/",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "version": "3.0",
+          "ad-network-id": "example123.skadnetwork",
+          "campaign-id": 42,
+          "transaction-id": "f9ac267a-a889-44ce-b5f7-0166d11461f0",
+          "app-id": 525463029,
+          "attribution-signature": "MEUCIQDDetUtkyc/MiQvVJ5I6HIO1E7l598572Wljot2Onzd4wIgVJLzVcyAV+TXksGNoa0DTMXEPgNPeHCmD4fw1ABXX0g=",
+          "redownload": true,
+          "fidelity-type": 1,
+          "did-win": false
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    }
+  ],
+  "stored": {
+    "skan_postbacks": 0
+  }
+}

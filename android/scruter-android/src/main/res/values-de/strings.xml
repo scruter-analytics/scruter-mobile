@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scruter_team_added">Dieses Telefon erstellt jetzt die Bilder der Bildschirmanalyse von Scruter.</string>
+    <string name="scruter_team_expired">Dieser Code ist abgelaufen oder wurde bereits verwendet: Zeigen Sie in Scruter einen neuen an.</string>
+    <string name="scruter_team_unreachable">Scruter ist nicht erreichbar: Prüfen Sie die Verbindung und scannen Sie den Code erneut.</string>
+    <string name="scruter_team_confirm_title">Dieses Telefon zum Team von %1$s hinzufügen?</string>
+    <string name="scruter_team_confirm_text">Dieses Telefon nimmt dann Bilder der Bildschirme von %1$s für das Team auf, und seine Nutzung zählt nicht mehr in den Statistiken. Lehnen Sie ab, wenn Sie nicht zum Team gehören.</string>
+    <string name="scruter_team_confirm_yes">Hinzufügen</string>
+    <string name="scruter_team_confirm_no">Abbrechen</string>
+</resources>

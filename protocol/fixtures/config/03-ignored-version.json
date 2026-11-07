@@ -1,0 +1,20 @@
+{
+  "description": "A version the app ignores (`ignored_versions` holds 0.9.*): collection off for it.",
+  "schema": "config",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/m/v1/config?a={{APP}}&p=android&av=0.9.3&sv=1.0.0"
+      },
+      "expect": {
+        "status": 200,
+        "json_subset": {
+          "v": 1,
+          "on": 0
+        }
+      }
+    }
+  ]
+}

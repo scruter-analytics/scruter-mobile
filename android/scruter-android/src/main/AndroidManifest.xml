@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The SDK asks for the network only: no advertising id (no AD_ID permission), no location, no phone state. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application>
+        <!-- Team phones (docs/MOBILE.md §3.12): the console's QR code opens the app's test build through this scheme.
+             The Gradle plugin net.scruter.symbols sets scruterAppId (the app id in lower case). -->
+        <activity
+            android:name="net.scruter.internal.TeamLinkActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="scruter-${scruterAppId}" android:host="team" />
+            </intent-filter>
+        </activity>
+
+        <!-- The flush when the app goes to the background (docs/MOBILE.md §3.15). -->
+        <service
+            android:name="net.scruter.internal.FlushJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+    </application>
+</manifest>

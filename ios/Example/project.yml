@@ -1,0 +1,89 @@
+# The example app of the iOS SDK: SwiftUI and UIKit screens, a list, a form and a masked view.
+# Generate the Xcode project with XcodeGen (https://github.com/yonaskolb/XcodeGen): `xcodegen` in this directory.
+# The SDK's sources are compiled here as one framework module (as CocoaPods builds the pod); apps integrate it through
+# Swift Package Manager or CocoaPods (../README.md).
+name: ScruterExample
+options:
+  bundleIdPrefix: net.scruter
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  ScruterAnalytics:
+    type: framework
+    platform: iOS
+    sources:
+      - path: ../Sources/ScruterAnalytics
+      - path: ../Sources/ScruterCrash
+        headerVisibility: public
+      - path: Support/ScruterAnalytics.h
+        headerVisibility: public
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.analytics
+        PRODUCT_NAME: ScruterAnalytics
+        DEFINES_MODULE: YES
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: NO
+        CLANG_ENABLE_MODULES: YES
+        # Optimised in every configuration, tests included: they measure the budgets of docs/MOBILE.md §3.18.
+        SWIFT_OPTIMIZATION_LEVEL: "-O"
+        SWIFT_COMPILATION_MODE: wholemodule
+        GCC_OPTIMIZATION_LEVEL: s
+  ScruterExample:
+    type: application
+    platform: iOS
+    sources:
+      - path: ScruterExample
+    dependencies:
+      - target: ScruterAnalytics
+    info:
+      path: ScruterExample/Info.plist
+      properties:
+        CFBundleDisplayName: Scruter Example
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "100"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        CFBundleURLTypes:
+          - CFBundleURLName: net.scruter.example.team
+            CFBundleURLSchemes: [scruter-exmpl01]
+        NSAdvertisingAttributionReportEndpoint: https://scruter.net
+        AdAttributionKit:
+          AttributionCopyEndpoint: https://scruter.net
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.example
+        TARGETED_DEVICE_FAMILY: "1,2"
+  ScruterExampleTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ScruterExampleTests
+    dependencies:
+      - target: ScruterExample
+      - target: ScruterAnalytics
+        embed: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.example.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  ScruterExample:
+    build:
+      targets:
+        ScruterExample: all
+        ScruterExampleTests: [test]
+    test:
+      config: Debug
+      targets: [ScruterExampleTests]
+      gatherCoverageData: false

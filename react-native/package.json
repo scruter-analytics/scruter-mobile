@@ -1,0 +1,86 @@
+{
+  "name": "@scruter/react-native",
+  "version": "1.0.0",
+  "description": "Scruter Analytics for React Native: privacy-first app analytics, no IDFA, no GAID, no ATT prompt, no banner.",
+  "license": "MIT",
+  "author": "1618 Technologies (Scruter) <contact@scruter.net>",
+  "homepage": "https://scruter.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scruter-analytics/scruter-mobile.git",
+    "directory": "react-native"
+  },
+  "keywords": ["react-native", "expo", "analytics", "privacy", "crash-reporting"],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "bin": { "scruter": "cli/index.js" },
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "react-native": "./src/index.ts",
+      "default": "./lib/index.js"
+    },
+    "./metro": "./metro/index.js",
+    "./app.plugin.js": "./app.plugin.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "lib",
+    "cli",
+    "metro",
+    "plugin",
+    "ios",
+    "android/build.gradle",
+    "android/gradle.properties",
+    "android/proguard-rules.pro",
+    "android/src",
+    "app.plugin.js",
+    "react-native.config.js",
+    "ScruterReactNative.podspec",
+    "!**/__tests__"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "budget": "node scripts/budget.mjs",
+    "prepack": "npm run build && node scripts/sync-ios.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "peerDependencies": {
+    "@expo/config-plugins": "*",
+    "react": "*",
+    "react-native": ">=0.73.0"
+  },
+  "peerDependenciesMeta": {
+    "@expo/config-plugins": { "optional": true }
+  },
+  "devDependencies": {
+    "@babel/core": "7.26.0",
+    "@babel/preset-env": "7.26.0",
+    "@babel/preset-react": "7.26.3",
+    "@babel/preset-typescript": "7.26.0",
+    "@expo/config-plugins": "9.0.14",
+    "@types/jest": "29.5.14",
+    "@types/node": "22.10.5",
+    "@types/react": "18.2.79",
+    "@types/react-test-renderer": "18.3.1",
+    "babel-jest": "29.7.0",
+    "esbuild": "0.24.2",
+    "jest": "29.7.0",
+    "react": "18.2.0",
+    "react-native": "0.73.11",
+    "react-test-renderer": "18.2.0",
+    "typescript": "5.7.3"
+  },
+  "codegenConfig": {
+    "name": "RNScruterSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/specs",
+    "android": { "javaPackageName": "net.scruter.reactnative" },
+    "ios": { "modulesProvider": { "Scruter": "ScruterModule" } }
+  }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shown to a member of the app's team after scanning the QR code of App settings › Team phones (docs/MOBILE.md §3.12). -->
+    <string name="scruter_team_added">This phone now takes the screen images of Scruter’s screen analysis.</string>
+    <string name="scruter_team_expired">This code has expired or was already used: show a new one in Scruter.</string>
+    <string name="scruter_team_unreachable">Scruter could not be reached: check the connection and scan the code again.</string>
+    <string name="scruter_team_confirm_title">Add this phone to the %1$s team?</string>
+    <string name="scruter_team_confirm_text">This phone will take pictures of %1$s’s screens for its team, and its use will no longer count in the statistics. Decline if you are not part of it.</string>
+    <string name="scruter_team_confirm_yes">Add</string>
+    <string name="scruter_team_confirm_no">Cancel</string>
+</resources>

@@ -1,0 +1,23 @@
+{
+  "description": "Content-Encoding br (only gzip is accepted).",
+  "schema": "batch",
+  "valid": false,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json",
+          "content-encoding": "br"
+        },
+        "raw": "{}"
+      },
+      "expect": {
+        "status": 415,
+        "error_code": "unsupported_encoding"
+      }
+    }
+  ],
+  "stored": {}
+}

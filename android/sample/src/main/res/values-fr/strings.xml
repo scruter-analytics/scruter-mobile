@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Exemple Scruter</string>
+    <string name="checkout">Commande (formulaire Views)</string>
+    <string name="compose_shop">Boutique (Jetpack Compose)</string>
+    <string name="catalog">Catalogue</string>
+    <string name="product">Produit %1$d</string>
+    <string name="postal_code">Code postal</string>
+    <string name="email">E-mail</string>
+    <string name="password">Mot de passe</string>
+    <string name="terms">J’accepte les conditions</string>
+    <string name="customer">Camille Martin, 12 rue des Ateliers</string>
+    <string name="pay">Payer</string>
+    <string name="add_to_cart">Ajouter au panier</string>
+    <string name="cart">Panier</string>
+</resources>

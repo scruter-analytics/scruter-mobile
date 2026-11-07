@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scruter.net/schemas/mobile/v1/symbols.schema.json",
+  "title": "POST /m/v1/symbols and POST /m/v1/symbols/missing",
+  "description": "docs/API.md §5.3, docs/MOBILE.md §4.3.",
+  "$defs": {
+    "kind": {"enum": ["dsym", "r8_mapping", "source_map", "flutter_symbols", "ndk_symbols"]},
+    "debug_id": {"type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[A-Za-z0-9._:-]+$"},
+    "upload": {
+      "type": "object",
+      "required": ["app", "platform", "kind", "debug_id", "size", "sha256"],
+      "properties": {
+        "app": {"type": "string", "pattern": "^[A-Z0-9_-]{1,32}$"},
+        "platform": {"enum": ["ios", "android", "react_native", "flutter"]},
+        "kind": {"$ref": "#/$defs/kind"},
+        "debug_id": {"$ref": "#/$defs/debug_id"},
+        "app_version": {"type": "string", "maxLength": 40},
+        "build": {"type": "string", "maxLength": 40},
+        "arch": {"type": "string", "maxLength": 20},
+        "file_name": {"type": "string", "maxLength": 200},
+        "size": {"type": "integer", "minimum": 1, "maximum": 2147483648},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "missing": {
+      "type": "object",
+      "required": ["app", "files"],
+      "properties": {
+        "app": {"type": "string", "pattern": "^[A-Z0-9_-]{1,32}$"},
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "required": ["kind", "debug_id"],
+            "properties": {"kind": {"$ref": "#/$defs/kind"}, "debug_id": {"$ref": "#/$defs/debug_id"}}
+          }
+        }
+      }
+    }
+  }
+}

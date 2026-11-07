@@ -1,0 +1,37 @@
+name: scruter_flutter
+description: >-
+  Scruter Analytics for Flutter: privacy-first app analytics hosted in France. Screens, events, retention, crashes and
+  screen analysis, without an advertising id, an ATT prompt or a consent banner.
+version: 1.0.0
+homepage: https://scruter.net
+repository: https://github.com/scruter-analytics/scruter-mobile/tree/main/flutter
+issue_tracker: https://github.com/scruter-analytics/scruter-mobile/issues
+documentation: https://github.com/scruter-analytics/scruter-mobile/blob/main/flutter/README.md
+topics: [analytics, privacy, crash-reporting]
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  crypto: ^3.0.3
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter
+  go_router: ">=14.0.0 <18.0.0"
+
+executables:
+  upload_symbols: upload_symbols
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: net.scruter.flutter
+        pluginClass: ScruterFlutterPlugin
+      ios:
+        pluginClass: ScruterFlutterPlugin

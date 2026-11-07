@@ -1,0 +1,21 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // This repository's own Android SDK (../android: publishReleasePublicationToStagingRepository); an app takes it
+        // from Maven Central through the plugin.
+        maven { url = uri("${rootDir}/../../../android/build/staging") }
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

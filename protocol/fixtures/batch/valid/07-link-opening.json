@@ -1,0 +1,85 @@
+{
+  "description": "A session opened by a universal link with utm_ parameters and another parameter: host + path and utm_* are kept, never the other parameter.",
+  "schema": "batch",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH}}",
+          "t": "{{NOW}}",
+          "sdk": "ios/1.0.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 1,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 0,
+              "p": "ios",
+              "bid": "fr.scruter.conformance",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "18.2",
+              "m": "iPhone16,2",
+              "f": "phone",
+              "l": "fr",
+              "o": {
+                "k": "link",
+                "u": "https://atelier-mona.fr/boutique/bol?utm_source=site&utm_medium=banner&order=12345678"
+              },
+              "c": {
+                "sv": 2,
+                "ev": 1,
+                "dur": 95,
+                "en": "Accueil",
+                "ex": "Fiche produit",
+                "rev": {
+                  "EUR": 3400
+                },
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-20000}}"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Accueil",
+              "t": "{{NOW-110000}}"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    }
+  ],
+  "stored": {
+    "session": {
+      "open_kind": "link",
+      "utm_source": "site",
+      "utm_medium": "banner",
+      "referrer": "atelier-mona.fr/boutique/bol"
+    },
+    "nothing_contains": [
+      "12345678"
+    ]
+  }
+}
