@@ -3,7 +3,7 @@ import 'dart:async';
 import 'engine.dart';
 
 /// The version batches name (`flutter/1.0.0`): the package's.
-const scruterVersion = '1.0.2';
+const scruterVersion = '1.1.0';
 
 /// The kind of a form field's error (docs/MOBILE.md §3.9).
 enum ScruterFieldError {

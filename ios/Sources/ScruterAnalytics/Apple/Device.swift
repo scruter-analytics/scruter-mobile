@@ -32,7 +32,19 @@ enum Device {
         case .debug: d.installSource = "other"
         }
         d.copyEndpoint = b.object(forInfoDictionaryKey: "NSAdvertisingAttributionReportEndpoint") as? String
+        // On a Mac the iOS layer runs as on a phone; only the platform, the form and the model say where it runs.
+        if runsOnMac { d = MacFacts.onMac(d, model: MacFacts.model()) }
         return d
+    }
+
+    /// An iOS app running on a Mac: Mac Catalyst, or an iPhone or iPad app on Apple silicon.
+    static var runsOnMac: Bool {
+        #if targetEnvironment(macCatalyst)
+        return true
+        #else
+        let p = ProcessInfo.processInfo
+        return p.isMacCatalystApp || p.isiOSAppOnMac
+        #endif
     }
 
     /// Apple's machine identifier (`iPhone16,2`), the simulator's model on the simulator.

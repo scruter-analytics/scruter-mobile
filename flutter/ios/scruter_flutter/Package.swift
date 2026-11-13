@@ -12,7 +12,7 @@ let package = Package(
     products: [.library(name: "scruter-flutter", targets: ["scruter_flutter"])],
     dependencies: [
         local.map { Package.Dependency.package(path: $0) }
-            ?? .package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.0.2")
+            ?? .package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.1.0")
     ],
     targets: [
         .target(

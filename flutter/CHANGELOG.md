@@ -1,3 +1,8 @@
+## 1.1.0
+
+An iPhone or iPad app running on a Mac (« Designed for iPad » on Apple silicon) sends the platform `macos`, the form
+`desktop` and the Mac's model, through the iOS SDK the plugin carries. Nothing else changes in the plugin.
+
 ## 1.0.2
 
 No change to the plugin: every Scruter SDK shares one version.

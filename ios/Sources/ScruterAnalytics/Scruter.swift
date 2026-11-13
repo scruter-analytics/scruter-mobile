@@ -4,7 +4,7 @@ import Foundation
 import UIKit
 #endif
 
-/// Scruter Analytics for iOS.
+/// Scruter Analytics for iOS and macOS.
 ///
 /// ```swift
 /// import ScruterAnalytics
@@ -46,7 +46,8 @@ public enum Scruter {
 
     // MARK: Screens and events
 
-    /// Counts a screen view. UIKit screens are counted automatically; name SwiftUI screens with `.scruterScreen(_:)`.
+    /// Counts a screen view. UIKit and AppKit screens are counted automatically; name SwiftUI screens with
+    /// `.scruterScreen(_:)`.
     public static func screen(_ name: String) {
         Runtime.shared.explicitScreen(name)
     }
@@ -273,7 +274,7 @@ extension Scruter {
         }
         guard kind == "crash" else { return }
         // The runtime aborts next: the report is on disk first, and the abort is not a second crash.
-        #if canImport(UIKit) && !os(watchOS)
+        #if (canImport(UIKit) && !os(watchOS)) || os(macOS)
         Crashes.muteNativeReports()
         #endif
         Runtime.shared.queue.sync {}
@@ -346,6 +347,8 @@ final class Runtime {
             } else {
                 #if canImport(UIKit) && !os(watchOS)
                 env = ApplePlatform.makeEnvironment(options: options, queue: queue, facts: mainFacts)
+                #elseif os(macOS)
+                env = MacPlatform.makeEnvironment(options: options, queue: queue)
                 #else
                 let store = FileStore(
                     directory: FileManager.default.temporaryDirectory.appendingPathComponent("scruter-\(options.appId)"))
@@ -374,6 +377,8 @@ final class Runtime {
             }
             #if canImport(UIKit) && !os(watchOS)
             ApplePlatform.shared.attach(engine: e, runtime: self)
+            #elseif os(macOS)
+            MacPlatform.shared.attach(engine: e, runtime: self)
             #endif
             e.start()
             lock.lock()
@@ -411,6 +416,12 @@ final class Runtime {
             return
         }
         ApplePlatform.shared.explicitScreen(name, forward: forward)
+        #elseif os(macOS)
+        if screenListener != nil {
+            run { $0.screen(name) }
+            return
+        }
+        MacPlatform.shared.explicitScreen(name, forward: forward)
         #else
         run { $0.screen(name) }
         #endif

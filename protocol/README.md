@@ -1,6 +1,6 @@
 # Scruter mobile protocol — conformance kit
 
-The wire protocol v1 of the Scruter SDKs (iOS, Android, React Native, Flutter): `docs/MOBILE.md` in the Scruter
+The wire protocol v1 of the Scruter SDKs (iOS and macOS, Android, React Native, Flutter): `docs/MOBILE.md` in the Scruter
 monorepo is the normative behaviour, `docs/API.md` §5.3 the HTTP shapes. This directory holds what every SDK and the
 backend test against:
 
@@ -21,7 +21,7 @@ node run.mjs --ingest http://127.0.0.1:4100 --app ATMONA02 --only batch/valid
 ```
 
 The app given to `--app` must be an app property with the conformance identifiers: iOS bundle id and Android package
-`fr.scruter.conformance`, App Store id `525463029`, time zone `Europe/Paris`, ignored versions `0.9.*`, in a workspace
+`fr.scruter.conformance`, macOS bundle id `fr.scruter.conformance.mac`, App Store id `525463029`, time zone `Europe/Paris`, ignored versions `0.9.*`, in a workspace
 whose trial is running (full collection). The backend's tests create it themselves (`scruter-ingest`, test
 `mobile_e2e::conformance_fixtures`, which also checks the stored rows). Placeholders replaced per fixture: `{{APP}}`, `{{BATCH}}`, `{{BATCH2}}`, `{{SESSION}}`,
 `{{DAILY}}` (random ids), `{{TODAY}}` (date in Europe/Paris), `{{NOW}}`, `{{NOW-<ms>}}`, `{{NOW+<ms>}}` (numbers, ms).

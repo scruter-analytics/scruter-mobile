@@ -10,10 +10,10 @@
     "app": {"type": "string", "pattern": "^[A-Z0-9_-]{1,32}$"},
     "token": {"type": "string", "pattern": "^scr_qr_[A-Za-z0-9_-]{32}$"},
     "debug_key": {"type": "string", "pattern": "^scr_dbg_[A-Za-z0-9_-]{43}$"},
-    "platform": {"enum": ["ios", "android"]},
+    "platform": {"enum": ["ios", "android", "macos"]},
     "model": {"type": "string", "minLength": 1, "maxLength": 60},
     "os": {"type": "string", "minLength": 1, "maxLength": 20},
-    "form": {"enum": ["phone", "tablet"]},
+    "form": {"enum": ["phone", "tablet", "desktop"]},
     "app_version": {"type": "string", "minLength": 1, "maxLength": 40},
     "build_kind": {"enum": ["release", "testflight", "test", "debug"]}
   }

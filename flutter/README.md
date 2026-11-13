@@ -52,6 +52,8 @@ testers, which the app's settings can exclude).
 ## Screens
 
 The observer counts a screen when a route becomes the visible one, and again when the user comes back to it, like a page.
+**Without it, no screen is counted**: sessions and events still arrive, and Scruter's dashboard says that the screens are
+not measured.
 
 ```dart
 MaterialApp(navigatorObservers: [ScruterObserver()], …)      // Navigator 1 and 2

@@ -1,6 +1,6 @@
 {
   "name": "@scruter/react-native",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Scruter Analytics for React Native: privacy-first app analytics, no IDFA, no GAID, no ATT prompt, no banner.",
   "license": "MIT",
   "author": "1618 Technologies (Scruter) <contact@scruter.net>",

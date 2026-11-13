@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "net.scruter"
-version = "1.0.2"
+version = "1.1.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17

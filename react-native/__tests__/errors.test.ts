@@ -151,7 +151,7 @@ describe('conformance', () => {
       a: 'ATMONA02',
       b: '0f3c9a1e7b2d4c6a8e0f1a2b3c4d5e6f',
       t: 1762345678901,
-      sdk: 'react_native/1.0.2',
+      sdk: 'react_native/1.1.0',
       ce: '',
       dbg: 0,
       s: [

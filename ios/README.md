@@ -1,7 +1,8 @@
 # Scruter Analytics for iOS
 
-Privacy-first analytics for iOS apps, hosted in France: screens, events, sessions, retention, sources, crashes and
-Screen analysis — **without the IDFA, without an App Tracking Transparency prompt, without a consent banner**.
+Privacy-first analytics for iOS apps, and Mac apps (§ macOS), hosted in France: screens, events, sessions, retention,
+sources, crashes and Screen analysis — **without the IDFA, without an App Tracking Transparency prompt, without a consent
+banner**.
 
 - The SDK draws a **random identifier each day** and forgets it at midnight (the app's time zone). The phone keeps only
   the day the app was installed, shared by everyone who installed it that day: that is what makes "32% come back the next
@@ -10,7 +11,7 @@ Screen analysis — **without the IDFA, without an App Tracking Transparency pro
   stored by Scruter: the IP address (country and city are derived from it, then it is dropped).
 - A user's screen is **never** captured. Screen images come only from your team's phones (§ Team phones).
 
-Requirements: iOS 15+, Xcode 15+, Swift 5.9+. No third-party dependency. MIT licence.
+Requirements: iOS 15+ or macOS 12+, Xcode 15+, Swift 5.9+. No third-party dependency. MIT licence.
 
 ## Install
 
@@ -23,7 +24,7 @@ https://github.com/scruter-analytics/scruter-mobile
 and add the **ScruterAnalytics** product to your app target. In a `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.0.2"),
+.package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.1.0"),
 // …
 .product(name: "ScruterAnalytics", package: "scruter-mobile"),
 ```
@@ -32,7 +33,7 @@ and add the **ScruterAnalytics** product to your app target. In a `Package.swift
 git source needs no trunk):
 
 ```ruby
-pod 'Scruter', :git => 'https://github.com/scruter-analytics/scruter-mobile', :tag => '1.0.2'
+pod 'Scruter', :git => 'https://github.com/scruter-analytics/scruter-mobile', :tag => '1.1.0'
 ```
 
 ## Start: three lines
@@ -295,6 +296,45 @@ truncated, properties dropped…). Property values are logged only in debug buil
 | Network | ≤ 1 batch / 30 s in the foreground | ≈ 1–3 KB gzipped per batch |
 | Battery | no background timer, no location | no timer at all: engaged time is computed from the interactions |
 
+## macOS
+
+The same package measures a native Mac app (AppKit or SwiftUI, macOS 12+), and an iPhone or iPad app that runs on a
+Mac (built with Mac Catalyst, or « Designed for iPad » on Apple silicon). Install it as above (with CocoaPods, in a
+target with `platform :osx, '12.0'`) and start it the same way, with AppKit in `applicationDidFinishLaunching(_:)`:
+
+```swift
+@main struct AtelierMonaMacApp: App {
+    init() { Scruter.start(appId: "ATMONA02") }
+    var body: some Scene { WindowGroup { OrdersView().scruterScreen("Orders") } }
+}
+```
+
+A Mac sends the platform `macos`, the form `desktop`, its model (`Mac15,7`, from `hw.model`: a model, not a device
+identifier) and the macOS version (`26.7`).
+
+- **Sessions.** The app becoming active starts a session or resumes it (30 minutes); resigning active, or quitting,
+  sends what waits (a quit waits for the batch 2 s at most).
+- **Screens.** The content view controller of the key window, counted when the window becomes key (its type name
+  without `ViewController`, as on iOS; the selected tab of an `NSTabViewController`); name it with
+  `viewController.scruterScreenName = "Orders"`. SwiftUI views with `.scruterScreen("Orders")`, and
+  `Scruter.screen("Orders")` anywhere. A window's title is never read.
+- **Events, properties, versions, opt-out, test devices, debug logging**: as on iOS.
+- **Crashes**: the same handlers and MetricKit's diagnostics (macOS 12+); upload the dSYMs the same way.
+- **Storage**: `~/Library/Application Support/<bundle id>/Scruter` (in the app's container when it is sandboxed); a
+  team device's token in the data protection keychain, or in a file next to the others when the build may not use
+  it (an unsigned build).
+- **Build and install**: a development-signed build (Xcode's Debug, `get-task-allow`) is a debug build — the
+  installation check shows it, it is never counted, and `debugKey:` makes it a team device (its sessions are never
+  counted; it takes no screen images); a TestFlight build sends `testflight`; the Mac App Store `mac_app_store`; a
+  Developer ID or other download `other` (`testBuild: true` marks a test build).
+- **Not on a Mac**: Advanced analytics (taps, scroll, forms), screen images, the team-phone QR code, SKAdNetwork and
+  AdAttributionKit. `.scruterId`, `.scruterMask`, `.scruterIgnore` and `.scruterForm` compile and do nothing, so a
+  SwiftUI view shared with iOS builds for both.
+
+An iPhone or iPad app on a Mac keeps the iOS layer as it is (taps, forms, captures included); only the platform
+(`macos`), the form (`desktop`) and the model (the Mac's) change. Its version, iOS version and install source stay those
+of the iOS app (an App Store install is `app_store`).
+
 ## Example app and tests
 
 `ios/Example/` holds a small app (SwiftUI and UIKit screens, a list, a form, a masked view) and its tests. Generate
@@ -302,3 +342,5 @@ the project with [XcodeGen](https://github.com/yonaskolb/XcodeGen): `cd ios/Exam
 `ScruterExample.xcodeproj`. Core tests: `swift test` (macOS) or `ios/scripts/linux-test.sh` (Linux, Docker). The CI
 (`.github/workflows/ios.yml`) runs the core tests, the SDK and the example's tests on an iOS simulator, checks every
 payload against `protocol/schema`, runs `pod lib lint`, tests `upload-symbols` and checks the binary size.
+`ScruterExampleMac`, in the same project, is a small Mac app: `ios/scripts/macos-run.sh` runs it against a local fake
+server and checks the batches it sends (platform, model, screens, an event, the flush at quit).

@@ -7,7 +7,7 @@ import UIKit
 public final class ScruterHost: NSObject {
     @objc public static func start(_ options: NSDictionary, launchOptions: NSDictionary?, log: ((String) -> Void)?) {
         guard let appId = options["appId"] as? String else { return }
-        Scruter._setBridge(sdk: "react_native", version: options["version"] as? String ?? "1.0.2")
+        Scruter._setBridge(sdk: "react_native", version: options["version"] as? String ?? "1.1.0")
         Scruter._setElementInspector(ReactElements.inspect)
         if let log = log { Scruter._setLogSink(log) }
         Scruter.start(

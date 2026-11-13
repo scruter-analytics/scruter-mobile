@@ -4,7 +4,7 @@
 //   node run.mjs --ingest http://127.0.0.1:4100 --app ATMONA02 [--only batch/valid] [--schemas-only]
 //
 // The app must exist with the conformance identifiers (README.md): iOS bundle id and Android package
-// `fr.scruter.conformance`, App Store id 525463029, time zone Europe/Paris, ignored versions `0.9.*`, a workspace in
+// `fr.scruter.conformance`, macOS bundle id `fr.scruter.conformance.mac`, App Store id 525463029, time zone Europe/Paris, ignored versions `0.9.*`, a workspace in
 // its trial (full collection). Placeholders: {{APP}}, {{BATCH}}, {{BATCH2}}, {{SESSION}}, {{DAILY}} (random per
 // fixture), {{TODAY}} (Europe/Paris), {{NOW}}, {{NOW-<ms>}}, {{NOW+<ms>}} (numbers).
 import { readFileSync, readdirSync, statSync } from 'node:fs';

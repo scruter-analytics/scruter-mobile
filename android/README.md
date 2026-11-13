@@ -13,7 +13,7 @@ In the app module's `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("net.scruter.symbols") version "1.0.2"
+    id("net.scruter.symbols") version "1.1.0"
 }
 
 scruter {
@@ -21,7 +21,7 @@ scruter {
 }
 
 dependencies {
-    implementation("net.scruter:scruter-android:1.0.2")
+    implementation("net.scruter:scruter-android:1.1.0")
 }
 ```
 

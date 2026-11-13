@@ -1,0 +1,125 @@
+{
+  "description": "A native macOS app (AppKit or SwiftUI macOS target): platform macos, form desktop, the Mac's hw.model, its own bundle id (the app's macOS bundle ID), installed from the Mac App Store. Accepted and stored like an iOS session; the model is named, the OS reads macOS, the device desktop.",
+  "schema": "batch",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH}}",
+          "t": "{{NOW}}",
+          "sdk": "ios/1.1.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 1,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 1,
+              "p": "macos",
+              "bid": "fr.scruter.conformance.mac",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "15.1",
+              "m": "Mac14,2",
+              "f": "desktop",
+              "l": "fr",
+              "o": {
+                "k": "icon"
+              },
+              "c": {
+                "sv": 2,
+                "ev": 1,
+                "dur": 95,
+                "en": "Accueil",
+                "ex": "Fiche produit",
+                "rev": {
+                  "EUR": 3400
+                },
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-20000}}"
+              },
+              "ins": {
+                "src": "mac_app_store"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Accueil",
+              "t": "{{NOW-110000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen_end",
+              "n": "Accueil",
+              "t": "{{NOW-60000}}",
+              "ms": 48000,
+              "sc": 60
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Fiche produit",
+              "t": "{{NOW-59000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "event",
+              "n": "Ajout au panier",
+              "t": "{{NOW-30000}}",
+              "p": {
+                "coloris": "bleu",
+                "quantite": 2
+              },
+              "$": {
+                "a": 34.0,
+                "c": "EUR"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    }
+  ],
+  "stored": {
+    "events_pageview": 2,
+    "events_engagement": 1,
+    "events_custom": 1,
+    "sessions_sum_sign": 1,
+    "installs": 1,
+    "install": {
+      "store": "mac_app_store"
+    },
+    "session": {
+      "pageviews": 2,
+      "platform": "macos",
+      "app_version": "2.3.0",
+      "device_model": "MacBook Air (13-inch, M2, 2022)",
+      "os": "macOS",
+      "os_version": "15.1",
+      "device": "desktop",
+      "language": "fr",
+      "sdk_version": "ios/1.1.0"
+    }
+  }
+}

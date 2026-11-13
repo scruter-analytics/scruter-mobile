@@ -1,6 +1,8 @@
-#if canImport(UIKit) && !os(watchOS)
+#if (canImport(UIKit) && !os(watchOS)) || os(macOS)
 import Foundation
+#if canImport(UIKit)
 import UIKit
+#endif
 
 #if canImport(MetricKit)
 import MetricKit
@@ -10,8 +12,8 @@ import MetricKit
 import ScruterCrash
 #endif
 
-/// Crash capture on iOS (docs/MOBILE.md §3.10): ScruterCrash's signal, Mach and exception handlers write a report at
-/// the crash; MetricKit's crash and hang diagnostics are the second source, de-duplicated.
+/// Crash capture on iOS and macOS (docs/MOBILE.md §3.10): ScruterCrash's signal, Mach and exception handlers write a
+/// report at the crash; MetricKit's crash and hang diagnostics are the second source, de-duplicated.
 enum Crashes {
     static func reportPath(_ store: FileStore) -> String {
         store.url("crash.report").path
@@ -57,7 +59,7 @@ enum Crashes {
 }
 
 #if canImport(MetricKit)
-/// MetricKit's diagnostics (iOS 14+): crashes and hangs ≥ 2 s (`anr`), delivered at a later launch.
+/// MetricKit's diagnostics (iOS 14+, macOS 12+): crashes and hangs ≥ 2 s (`anr`), delivered at a later launch.
 final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber {
     static let shared = MetricKitSubscriber()
     private static var installed = false
@@ -77,7 +79,7 @@ final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber {
             for c in payload.crashDiagnostics ?? [] {
                 guard let tree = JSON.parse(c.callStackTree.jsonRepresentation()) else { continue }
                 var reason: String?
-                if #available(iOS 17.0, *), let r = c.exceptionReason {
+                if #available(iOS 17.0, macOS 14.0, *), let r = c.exceptionReason {
                     reason = r.className + ": " + r.composedMessage
                 } else {
                     reason = c.terminationReason
@@ -97,7 +99,7 @@ final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber {
         }
         guard !diagnostics.isEmpty else { return }
         let inApp = MetricKitSubscriber.inAppImages()
-        ApplePlatform.shared.run { engine in
+        Runtime.shared.run { engine in
             for d in diagnostics { engine.diagnostic(d, inApp: { inApp.contains($0) }) }
         }
     }

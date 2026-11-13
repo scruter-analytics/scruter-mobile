@@ -72,7 +72,8 @@ Scruter.start({ appId: 'ATMONA02' });            // once, before AppRegistry, ou
 ```
 
 That is all for React Navigation: every route counts as a screen, under its `name`, never its `params`. Going back
-counts again, like a page; coming back from the background does not.
+counts again, like a page; coming back from the background does not. **Without this `ref` (or `trackNavigation` below),
+no screen is counted**: sessions and events still arrive, and Scruter's dashboard says that the screens are not measured.
 
 If you already hold a ref, or use **Expo Router**:
 

@@ -11,7 +11,7 @@
       "required": ["app", "platform", "kind", "debug_id", "size", "sha256"],
       "properties": {
         "app": {"type": "string", "pattern": "^[A-Z0-9_-]{1,32}$"},
-        "platform": {"enum": ["ios", "android", "react_native", "flutter"]},
+        "platform": {"enum": ["ios", "android", "react_native", "flutter", "macos"]},
         "kind": {"$ref": "#/$defs/kind"},
         "debug_id": {"$ref": "#/$defs/debug_id"},
         "app_version": {"type": "string", "maxLength": 40},
