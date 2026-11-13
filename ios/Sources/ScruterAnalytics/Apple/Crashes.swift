@@ -70,7 +70,11 @@ final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber {
         MXMetricManager.shared.add(shared)
     }
 
+    // Metric payloads are not used, and macOS SDKs before macOS 26 mark `MXMetricPayload` unavailable: the optional
+    // requirement is left out there (crash and hang diagnostics below exist on macOS 12+).
+    #if !os(macOS)
     func didReceive(_ payloads: [MXMetricPayload]) {}
+    #endif
 
     func didReceive(_ payloads: [MXDiagnosticPayload]) {
         var diagnostics: [CrashReport.Diagnostic] = []
