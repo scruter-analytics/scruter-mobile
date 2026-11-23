@@ -51,8 +51,8 @@ final class ScreenView {
     private var recorded = 0
     private var recent: [(t: Int64, x: Double, y: Double)] = []
     private var inBurst = false
-    private var resolvedTaps: [JSON] = []
-    private var waiting: [(token: Int, entry: [JSON])] = []
+    private var resolvedTaps: [JSONValue] = []
+    private var waiting: [(token: Int, entry: [JSONValue])] = []
     private var nextToken = 1
 
     // Forms.
@@ -62,7 +62,7 @@ final class ScreenView {
 
     // States sent (`q`) and the last one still in the queue.
     private(set) var q = 0
-    private var lastStateTaps: [JSON] = []
+    private var lastStateTaps: [JSONValue] = []
     private(set) var dirty = true
 
     init(session: String, number: Int64 = Random.screenViewNumber(), name: String, start: Int64, analysed: Bool) {
@@ -181,8 +181,8 @@ final class ScreenView {
         }
         guard analysed, recorded < ScreenView.maxTaps else { return TapResult(token: 0, rage: rage) }
         recorded += 1
-        let entry: [JSON] = [
-            .string(Text.cut(selector, max: 200)), .int(Int64(max(0, min(9999, index)))), .string(kind),
+        let entry: [JSONValue] = [
+            .string(AnalyticsText.cut(selector, max: 200)), .int(Int64(max(0, min(9999, index)))), .string(kind),
             .int(Int64(max(0, min(100, x)))), .int(Int64(max(0, min(100, y)))), .int(max(0, now - start)),
             .int(rage ? 2 : 0),
         ]
@@ -258,7 +258,7 @@ final class ScreenView {
     @discardableResult
     func form(_ name: String) -> Form? {
         guard analysed else { return nil }
-        let n = Text.clean(name, max: 120)
+        let n = AnalyticsText.clean(name, max: 120)
         if let f = forms.first(where: { $0.name == n }) { return f }
         guard forms.count < ScreenView.maxForms else { return nil }
         let f = Form(name: n, index: forms.count)
@@ -270,11 +270,11 @@ final class ScreenView {
     @discardableResult
     func field(form name: String, key: String, type: String, position: Int? = nil) -> Field? {
         guard let f = form(name) else { return nil }
-        let k = Text.clean(key, max: 100)
+        let k = AnalyticsText.clean(key, max: 100)
         guard !k.isEmpty else { return nil }
         if let field = f.fields.first(where: { $0.key == k }) { return field }
         guard f.fields.count < ScreenView.maxFields else { return nil }
-        let field = Field(key: k, type: Text.cut(type, max: 30), position: min(255, position ?? f.fields.count))
+        let field = Field(key: k, type: AnalyticsText.cut(type, max: 30), position: min(255, position ?? f.fields.count))
         f.fields.append(field)
         dirty = true
         return field
@@ -310,7 +310,7 @@ final class ScreenView {
 
     /// An error shown on a field. Errors that follow a tap elsewhere (a send attempt) count one refused attempt.
     func fieldError(key: String, kind: ScruterFieldError, now: Int64) {
-        let k = Text.clean(key, max: 100)
+        let k = AnalyticsText.clean(key, max: 100)
         guard let f = forms.first(where: { form in form.fields.contains { $0.key == k } }) ?? forms.first,
             let field = field(form: f.name, key: k, type: "text")
         else { return }
@@ -343,7 +343,7 @@ final class ScreenView {
     // MARK: Wire
 
     /// The `screen_end` event (every session).
-    func endEvent(now: Int64) -> JSON {
+    func endEvent(now: Int64) -> JSONValue {
         [
             "s": .string(session), "k": "screen_end", "n": .string(name), "t": .int(now),
             "ms": .int(min(engagedMs, 86_400_000)), "sc": .int(Int64(scrollDepth)),
@@ -355,7 +355,7 @@ final class ScreenView {
 
     /// The next analysed state (`x` item). With `replacing`, the previous state is still unsent in the queue: the new
     /// one takes its number and carries its taps too (the server keeps the highest `q`).
-    func state(now: Int64, replacing: Bool) -> JSON {
+    func state(now: Int64, replacing: Bool) -> JSONValue {
         advance(to: now)
         var newTaps = Array(resolvedTaps.prefix(ScreenView.maxTapsPerState))
         if replacing && lastStateTaps.count + newTaps.count <= ScreenView.maxTapsPerState {
@@ -390,8 +390,8 @@ final class ScreenView {
 
     private func clamp(_ v: Int, _ hi: Int) -> Int { max(0, min(hi, v)) }
 
-    private func formJSON(_ f: Form, now: Int64) -> JSON {
-        let fields: [JSON] = f.fields.map { field in
+    private func formJSON(_ f: Form, now: Int64) -> JSONValue {
+        let fields: [JSONValue] = f.fields.map { field in
             var focus = field.focusMs
             if let at = field.focusedAt { focus += max(0, now - at) }
             return .array([

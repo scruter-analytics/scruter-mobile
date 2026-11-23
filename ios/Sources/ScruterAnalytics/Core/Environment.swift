@@ -5,7 +5,7 @@ import FoundationNetworking
 #endif
 
 /// The SDK's version, sent as `sdk` (`ios/1.0.0`) and in the configuration request (`sv`).
-public let scruterSDKVersion = "1.1.0"
+public let scruterSDKVersion = "1.2.0"
 
 /// Something scheduled that can be cancelled.
 final class Scheduled {
@@ -159,7 +159,7 @@ final class FileSecretStore: SecretStore {
     init(store: FileStore) { self.store = store }
     func get(_ key: String) -> String? { store.read("secret-\(key)").map { String(decoding: $0, as: UTF8.self) } }
     func set(_ key: String, _ value: String?) {
-        if let v = value { store.write("secret-\(key)", Text.utf8(v)) } else { store.remove("secret-\(key)") }
+        if let v = value { store.write("secret-\(key)", AnalyticsText.utf8(v)) } else { store.remove("secret-\(key)") }
     }
 }
 
@@ -204,7 +204,7 @@ struct DeviceInfo {
 }
 
 /// Everything the engine reaches outside itself. Tests build one with fakes.
-final class Environment {
+final class AnalyticsEnvironment {
     var now: () -> Int64
     let scheduler: Scheduler
     let http: HTTPClient

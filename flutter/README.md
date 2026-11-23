@@ -17,6 +17,10 @@ referrer, openings and team phones. Flutter draws its own widgets, so everything
 
 Requirements: Flutter 3.22+, iOS 15+, Android 7 (API 24)+. MIT licence.
 
+The same package carries **Scruter CMP**, the consent sheet of [Scruter CMP](https://scruter.net/cmp) with the proof of
+every choice, for an app that takes it (`scruter: { cmp: true }` in its `pubspec.yaml`): see [CMP.md](CMP.md). An app
+carries only the native code of the modules it takes; without that key, nothing changes.
+
 ## Install
 
 ```sh
@@ -86,7 +90,7 @@ Scruter.track('Order placed', revenue: 49.0, currency: 'EUR');
 
 Names ≤ 120 characters; ≤ 30 properties (strings, numbers, booleans; keys ≤ 300, values ≤ 2 000 characters). Revenue
 counts only with its ISO 4217 currency. **Never put personal data in names or properties** (an e-mail address, a name, an
-order number): the server masks e-mail addresses and long numbers anyway.
+order number): the server masks e-mail addresses anyway.
 
 ## Taps, scroll, time per block, forms
 

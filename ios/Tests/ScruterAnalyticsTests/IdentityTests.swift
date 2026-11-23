@@ -149,11 +149,11 @@ final class RulesTests: XCTestCase {
     }
 
     func testWildcards() {
-        XCTAssertTrue(Text.wildcard("Debug*", matches: "DebugMenu"))
-        XCTAssertTrue(Text.wildcard("*Test*", matches: "ATestB"))
-        XCTAssertFalse(Text.wildcard("Debug*", matches: "debugMenu"))
-        XCTAssertTrue(Text.wildcard("Cart", matches: "Cart"))
-        XCTAssertFalse(Text.wildcard("Cart", matches: "Carts"))
+        XCTAssertTrue(AnalyticsText.wildcard("Debug*", matches: "DebugMenu"))
+        XCTAssertTrue(AnalyticsText.wildcard("*Test*", matches: "ATestB"))
+        XCTAssertFalse(AnalyticsText.wildcard("Debug*", matches: "debugMenu"))
+        XCTAssertTrue(AnalyticsText.wildcard("Cart", matches: "Cart"))
+        XCTAssertFalse(AnalyticsText.wildcard("Cart", matches: "Carts"))
     }
 
     func testSensitiveFields() {

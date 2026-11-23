@@ -1,0 +1,24 @@
+{
+  "s": "ATMONA02",
+  "i": "cns_0123456789abcdef0123",
+  "b": 412,
+  "c": "close",
+  "o": "banner",
+  "l": "fr",
+  "h": "60e37e780048000a8255e6353a442ecde77e949aa68b6e19205e21945c4958a1",
+  "g": [],
+  "n": [
+    "advertising",
+    "analytics"
+  ],
+  "m": [
+    "security_storage"
+  ],
+  "r": 3,
+  "w": 411,
+  "ms": 2400,
+  "cv": "android/1.1.0",
+  "p": "android",
+  "ap": "fr.ateliermona.app",
+  "av": "2.3.0"
+}

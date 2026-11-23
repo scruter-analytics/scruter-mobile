@@ -66,7 +66,7 @@ enum Links {
         }
         let utm = (c.queryItems ?? []).filter { $0.name.lowercased().hasPrefix("utm_") }
         c.queryItems = utm.isEmpty ? nil : utm
-        return Text.cut(c.string ?? "", max: 2000)
+        return AnalyticsText.cut(c.string ?? "", max: 2000)
     }
 
     /// The opening a URL stands for: `widget` / `shortcut` / `notification` when the app marks it with

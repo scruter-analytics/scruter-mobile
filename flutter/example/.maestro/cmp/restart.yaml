@@ -1,0 +1,36 @@
+# After a hot restart: the native module keeps running, the new isolate hears each change once.
+appId: ${APP_ID}
+---
+# On iOS, Flutter shows the new isolate's semantics to accessibility only once the app becomes active again.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - pressKey: home
+      - launchApp:
+          stopApp: false
+- extendedWaitUntil:
+    visible: "Privacy"
+    timeout: 60000
+- tapOn: "Privacy"
+- extendedWaitUntil:
+    visible: "(whenReady · onChange\n)?1 · 0"
+    timeout: 20000
+- assertNotVisible: "Accept all"
+- scrollUntilVisible:
+    element: "Privacy choices"
+    direction: DOWN
+- tapOn: "Privacy choices"
+- extendedWaitUntil:
+    visible: "Accept all"
+    timeout: 20000
+- tapOn: "Accept all"
+- scrollUntilVisible:
+    element: "whenReady · onChange(\n.*)?"
+    direction: UP
+- extendedWaitUntil:
+    visible: "(whenReady · onChange\n)?1 · 1"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible: "(whenReady · onChange\n)?1 · 1"

@@ -1,0 +1,519 @@
+{
+  "description": "When the banner asks again (docs/CMP.md §4.4 rules 1–4; rule 5, the TCF, comes with lot cmp-mobile-tcf): `ask = mustAsk(stored, config, now)` with `now` in Unix seconds, the configuration reduced to what the rule reads (cookie.renew_months, banner.id, ab_test.b.id, purposes). A period is months × 30.44 days, rounded to the second. Checked against the web core by cmp/test/conformance.test.ts.",
+  "now": 1790000000,
+  "cases": [
+    {
+      "name": "rule 1: no choice stored",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": null,
+      "ask": true
+    },
+    {
+      "name": "rule 2: within the re-consent period",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1774219964,
+        "rev": 3,
+        "banner": 412,
+        "granted": [],
+        "pending": null
+      },
+      "ask": false
+    },
+    {
+      "name": "rule 2: the period ran out (a refusal too)",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1774219844,
+        "rev": 3,
+        "banner": 412,
+        "granted": [],
+        "pending": null
+      },
+      "ask": true
+    },
+    {
+      "name": "rule 2: the period ran out (a consent)",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1774219844,
+        "rev": 3,
+        "banner": 412,
+        "granted": [
+          "analytics"
+        ],
+        "pending": null
+      },
+      "ask": true
+    },
+    {
+      "name": "rule 2: 13 months chosen",
+      "config": {
+        "renew_months": 13,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1774219844,
+        "rev": 3,
+        "banner": 412,
+        "granted": [],
+        "pending": null
+      },
+      "ask": false
+    },
+    {
+      "name": "rule 3: a purpose that may be new, the choice names an older version",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 2,
+        "banner": 400,
+        "granted": [],
+        "pending": null
+      },
+      "ask": true
+    },
+    {
+      "name": "rule 3: the same version: the purpose existed and was refused",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 2,
+        "banner": 412,
+        "granted": [],
+        "pending": null
+      },
+      "ask": false
+    },
+    {
+      "name": "rule 4: a granted purpose changed since",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 2,
+        "banner": 412,
+        "granted": [
+          "embedded_content"
+        ],
+        "pending": null
+      },
+      "ask": true
+    },
+    {
+      "name": "rule 4: the changed purposes were refused",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 2,
+        "banner": 412,
+        "granted": [
+          "analytics",
+          "advertising"
+        ],
+        "pending": null
+      },
+      "ask": false
+    },
+    {
+      "name": "rule 4: granted at the current revision",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 3,
+        "banner": 412,
+        "granted": [
+          "embedded_content"
+        ],
+        "pending": null
+      },
+      "ask": false
+    },
+    {
+      "name": "A/B test: variant B's version is current",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": 413,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 2,
+        "banner": 413,
+        "granted": [],
+        "pending": null
+      },
+      "ask": false
+    },
+    {
+      "name": "A/B test: another version is older",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": 413,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 2,
+        "banner": 414,
+        "granted": [],
+        "pending": null
+      },
+      "ask": true
+    },
+    {
+      "name": "nothing changed",
+      "config": {
+        "renew_months": 6,
+        "banner": 412,
+        "ab_test_b": null,
+        "purposes": [
+          {
+            "key": "necessary",
+            "required": true,
+            "rev": 1
+          },
+          {
+            "key": "analytics",
+            "required": false,
+            "rev": 1
+          },
+          {
+            "key": "embedded_content",
+            "required": false,
+            "rev": 3
+          },
+          {
+            "key": "advertising",
+            "required": false,
+            "rev": 2
+          }
+        ]
+      },
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 1790000000,
+        "rev": 3,
+        "banner": 412,
+        "granted": [
+          "analytics",
+          "advertising",
+          "embedded_content"
+        ],
+        "pending": null
+      },
+      "ask": false
+    }
+  ]
+}

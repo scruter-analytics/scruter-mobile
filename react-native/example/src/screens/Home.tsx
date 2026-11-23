@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Text, View } from 'react-native';
 import { Scruter } from '@scruter/react-native';
+import { cmp } from '../config';
 import { Button } from '../ui';
 
 export function Home({ navigation }: { navigation: { navigate(route: string): void } }) {
@@ -10,6 +11,7 @@ export function Home({ navigation }: { navigation: { navigate(route: string): vo
       <Button testID="open_products" title="Shop" onPress={() => navigation.navigate('Products')} />
       <Button testID="open_checkout" title="Checkout" onPress={() => navigation.navigate('Checkout')} />
       <Button testID="open_settings" title="Settings" onPress={() => navigation.navigate('Settings')} />
+      {cmp ? <Button testID="open_privacy" title="Privacy" onPress={() => navigation.navigate('Privacy')} /> : null}
       <Button testID="welcome_event" title="Say hello" onPress={() => Scruter.track('Hello', { props: { from: 'home', n: 1 } })} />
     </View>
   );

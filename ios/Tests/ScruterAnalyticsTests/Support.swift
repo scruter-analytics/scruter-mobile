@@ -63,9 +63,9 @@ final class FakeHTTP: HTTPClient {
         for (_, c) in h { c(response) }
     }
 
-    var batches: [JSON] {
+    var batches: [JSONValue] {
         requests.filter { $0.url.path.hasSuffix("/m/v1/batch") }.compactMap { req in
-            req.body.flatMap { Gunzip.body($0, gzip: req.headers["Content-Encoding"] == "gzip") }.flatMap(JSON.parse)
+            req.body.flatMap { Gunzip.body($0, gzip: req.headers["Content-Encoding"] == "gzip") }.flatMap(JSONValue.parse)
         }
     }
 
@@ -132,7 +132,7 @@ final class Harness {
     @discardableResult
     func boot() -> Engine {
         let store = FileStore(directory: dir)
-        let env = Environment(
+        let env = AnalyticsEnvironment(
             now: { [scheduler] in scheduler.now }, scheduler: scheduler, http: http, store: store,
             secrets: FileSecretStore(store: store), device: device)
         env.log.enabled = true
@@ -146,7 +146,7 @@ final class Harness {
     /// Boots a wrapper's engine (`Scruter._setScreenListener`).
     func bootConfigFirst(listener: @escaping (ScruterBridgeScreen) -> Void) {
         let store = FileStore(directory: dir)
-        let env = Environment(
+        let env = AnalyticsEnvironment(
             now: { [scheduler] in scheduler.now }, scheduler: scheduler, http: http, store: store,
             secrets: FileSecretStore(store: store), device: device)
         engine = Engine(env: env, options: options)
@@ -160,7 +160,7 @@ final class Harness {
 
     /// Writes a batch for the protocol's validator (`node sdk/protocol/validate.mjs batch <file>`), when
     /// `SCRUTER_BATCH_OUT` names a directory.
-    static func export(_ batch: JSON, name: String) {
+    static func export(_ batch: JSONValue, name: String) {
         guard let out = ProcessInfo.processInfo.environment["SCRUTER_BATCH_OUT"] else { return }
         let dir = URL(fileURLWithPath: out)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

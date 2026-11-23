@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scruter.net/schemas/mobile/v1/cmp-sdk-catalogue.schema.json",
+  "title": "GET /m/v1/cmp/sdks/{version}.json (answer)",
+  "description": "docs/CMP-MOBILE.md §3.14: the classes whose presence means an SDK is linked (iOS: NSClassFromString, a Swift class as Module.Class; Android: Class.forName(name, false, loader)).",
+  "type": "object",
+  "required": ["v", "sdks"],
+  "properties": {
+    "v": {"type": "integer", "minimum": 1},
+    "sdks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["k"],
+        "additionalProperties": false,
+        "properties": {
+          "k": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,39}$"},
+          "ios": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)?$"}},
+          "android": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)+$"}}
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "@scruter/react-native",
-  "version": "1.1.0",
-  "description": "Scruter Analytics for React Native: privacy-first app analytics, no IDFA, no GAID, no ATT prompt, no banner.",
+  "version": "1.2.0",
+  "description": "Scruter Analytics and Scruter CMP for React Native: privacy-first app analytics without an IDFA or a GAID, and the native consent sheet of Scruter CMP.",
   "license": "MIT",
   "author": "1618 Technologies (Scruter) <contact@scruter.net>",
   "homepage": "https://scruter.net",
@@ -10,7 +10,7 @@
     "url": "https://github.com/scruter-analytics/scruter-mobile.git",
     "directory": "react-native"
   },
-  "keywords": ["react-native", "expo", "analytics", "privacy", "crash-reporting"],
+  "keywords": ["react-native", "expo", "analytics", "privacy", "crash-reporting", "consent", "gdpr", "cmp"],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "source": "src/index.ts",
@@ -25,6 +25,7 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "CMP.md",
     "src",
     "lib",
     "cli",
@@ -79,6 +80,6 @@
     "type": "modules",
     "jsSrcsDir": "src/specs",
     "android": { "javaPackageName": "net.scruter.reactnative" },
-    "ios": { "modulesProvider": { "Scruter": "ScruterModule" } }
+    "ios": { "modulesProvider": { "Scruter": "ScruterModule", "ScruterCMP": "ScruterCMPModule" } }
   }
 }

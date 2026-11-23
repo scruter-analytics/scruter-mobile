@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scruter.net/schemas/mobile/v1/cmp-config.schema.json",
+  "title": "GET /m/v1/cmp (answer)",
+  "description": "The configuration of an app's CMP module: docs/CMP-MOBILE.md §4.1, docs/API.md §5.1. `config` is the site script's ScriptConfig (scruter_cmp::script, cmp/src/config.ts) without what only a page uses. The SDK ignores fields it does not know.",
+  "type": "object",
+  "required": ["v", "on", "ttl"],
+  "properties": {
+    "v": {"const": 1},
+    "on": {"enum": [0, 1]},
+    "ttl": {"type": "integer", "minimum": 60, "maximum": 86400},
+    "config": {"$ref": "#/$defs/config"},
+    "app": {"$ref": "#/$defs/app"}
+  },
+  "if": {"properties": {"on": {"const": 1}}},
+  "then": {"required": ["config", "app"]},
+  "else": {"properties": {"config": false, "app": false}},
+  "$defs": {
+    "key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,39}$"},
+    "banner": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "integer", "minimum": 1},
+        "version": {"type": "integer", "minimum": 1}
+      }
+    },
+    "ui": {
+      "type": "object",
+      "required": ["template", "theme", "color", "on_color", "logo_mode", "buttons", "close_link", "branding", "languages", "default_language", "texts", "text_hashes"],
+      "properties": {
+        "template": {"enum": ["bar", "card", "modal", "chat"]},
+        "theme": {"enum": ["light", "dark", "auto"]},
+        "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+        "on_color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+        "logo_mode": {"enum": ["auto", "custom", "none"]},
+        "logo_url": {"type": ["string", "null"], "pattern": "^https://"},
+        "buttons": {"enum": ["three", "two"]},
+        "close_link": {"type": "boolean"},
+        "branding": {"type": "boolean"},
+        "delay_s": {"type": "integer", "minimum": 0, "maximum": 10},
+        "languages": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "default_language": {"type": "string"},
+        "texts": {"type": "object", "minProperties": 1},
+        "text_hashes": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+        "rtl": {"type": "array", "items": {"type": "string"}},
+        "aliases": {"type": "object"},
+        "providers": {"type": "object"},
+        "hero": {"type": "object", "required": ["type", "w", "h", "poster"]},
+        "no_panel": {"const": true},
+        "excluded_paths": false,
+        "excluded": false,
+        "floating_button": false,
+        "font": false
+      }
+    },
+    "config": {
+      "type": "object",
+      "required": ["format", "site", "config_rev", "consent_rev", "endpoint", "banner", "cookie", "purposes", "ui"],
+      "properties": {
+        "format": {"const": 1},
+        "site": {"type": "string", "pattern": "^[A-Z0-9]{4,16}$"},
+        "config_rev": {"type": "integer", "minimum": 0},
+        "consent_rev": {"type": "integer", "minimum": 1},
+        "endpoint": {"type": "string", "pattern": "^https?://"},
+        "banner": {"$ref": "#/$defs/banner"},
+        "ab_test": {
+          "type": ["object", "null"],
+          "required": ["id", "split_b", "b", "b_ui"],
+          "properties": {
+            "id": {"type": "string"},
+            "split_b": {"type": "integer", "minimum": 10, "maximum": 90},
+            "b": {"$ref": "#/$defs/banner"},
+            "b_ui": {"$ref": "#/$defs/ui"}
+          }
+        },
+        "cookie": {
+          "type": "object",
+          "required": ["renew_months"],
+          "properties": {"renew_months": {"enum": [3, 6, 12, 13]}, "domain": false}
+        },
+        "purposes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["key", "required", "rev"],
+            "properties": {
+              "key": {"$ref": "#/$defs/key"},
+              "required": {"type": "boolean"},
+              "rev": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "gcm": {"type": ["object", "null"], "required": ["mode", "map"]},
+        "tcf": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/tcf"}]},
+        "ui": {"$ref": "#/$defs/ui"},
+        "hosts": false,
+        "block": false,
+        "assets": false,
+        "analytics": false
+      }
+    },
+    "tcf": {
+      "description": "The IAB TCF v2.2 settings of the site, which apply to its app (docs/CMP-MOBILE.md §6); null when off",
+      "type": "object",
+      "required": ["cmp_id", "cmp_version", "gvl_version", "policy_version", "publisher_cc", "vendors", "purposes",
+                   "special_features", "stacks", "vendors_url", "translations_url", "ac_providers"],
+      "properties": {
+        "cmp_id": {"type": "integer", "minimum": 2, "maximum": 4095},
+        "cmp_version": {"type": "integer", "minimum": 0, "maximum": 4095},
+        "gvl_version": {"type": "integer", "minimum": 1, "maximum": 4095},
+        "policy_version": {"type": "integer", "minimum": 1, "maximum": 63},
+        "publisher_cc": {"type": "string", "pattern": "^[A-Z]{2}$"},
+        "vendors": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 65535}},
+        "purposes": {
+          "type": "object",
+          "propertyNames": {"pattern": "^[1-9][0-9]?$"},
+          "additionalProperties": {"enum": ["consent", "legitimate_interest", "off"]}
+        },
+        "special_features": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 64}},
+        "stacks": {
+          "type": "object",
+          "propertyNames": {"pattern": "^[1-9][0-9]?$"},
+          "additionalProperties": {"$ref": "#/$defs/key"}
+        },
+        "vendors_url": {"type": "string", "pattern": "^/cmp/[A-Za-z0-9]+/vendors-[0-9]+\\.json(\\?r=[0-9]+)?$"},
+        "ac_providers": {
+          "description": "Google's other ad tech providers selected for the site (ids of Google's Additional Consent list, not registered with the IAB TCF): shown after the vendors, with their name and privacy policy from the vendor subset's acProviders, and signalled in IABTCF_AddtlConsent",
+          "type": "array", "uniqueItems": true, "items": {"type": "integer", "minimum": 1, "maximum": 2147483647}
+        },
+        "translations_url": {"type": "string", "pattern": "^/cmp/tcf/[0-9]+/\\{lang\\}\\.json$"}
+      }
+    },
+    "app": {
+      "type": "object",
+      "required": ["policy_url", "icon", "ids", "sdk_catalogue"],
+      "properties": {
+        "policy_url": {"type": ["string", "null"], "pattern": "^https?://"},
+        "icon": {"type": ["string", "null"], "pattern": "^https://"},
+        "ids": {"type": "array", "minItems": 1, "maxItems": 22, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*(\\.[a-z0-9_-]+)+$"}},
+        "sdk_catalogue": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

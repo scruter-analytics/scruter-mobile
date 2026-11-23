@@ -31,7 +31,7 @@ final class MacPlatform: NSObject {
         return support.appendingPathComponent(owner, isDirectory: true).appendingPathComponent("Scruter", isDirectory: true)
     }
 
-    static func makeEnvironment(options: StartOptions, queue: DispatchQueue) -> Environment {
+    static func makeEnvironment(options: StartOptions, queue: DispatchQueue) -> AnalyticsEnvironment {
         let fm = FileManager.default
         let support = (try? fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
             ?? fm.temporaryDirectory
@@ -42,7 +42,7 @@ final class MacPlatform: NSObject {
         log.sink = { os_log("%{public}@", log: osLog, type: .default, $0) }
         var device = MacDevice.info(testBuild: options.testBuild)
         device.containerCreatedMs = MacDevice.containerCreated()
-        return Environment(
+        return AnalyticsEnvironment(
             scheduler: QueueScheduler(queue: queue), http: URLSessionHTTPClient(queue: queue), store: store,
             secrets: MacKeychainSecretStore(
                 service: "net.scruter.analytics." + options.appId, fallback: FileSecretStore(store: store)),
@@ -181,7 +181,7 @@ final class MacKeychainSecretStore: SecretStore {
         }
         guard let v = value else { return }
         var q = query(key)
-        q[kSecValueData as String] = Text.utf8(v)
+        q[kSecValueData as String] = AnalyticsText.utf8(v)
         q[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         if SecItemAdd(q as CFDictionary, nil) == errSecMissingEntitlement {
             refused = true

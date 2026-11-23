@@ -5,18 +5,18 @@ import Foundation
 /// The SDK writes its own JSON rather than going through `Codable`: the wire format uses short keys and tuples
 /// (`docs/API.md` §5.3), `Codable` would add generic specialisations to the binary (§3.18 budget), and
 /// `JSONSerialization` bridges numbers differently on Linux, where the core is tested.
-enum JSON {
+enum JSONValue {
     case null
     case bool(Bool)
     case int(Int64)
     case double(Double)
     case string(String)
-    case array([JSON])
+    case array([JSONValue])
     case object(Fields)
 
     // MARK: Accessors
 
-    subscript(key: String) -> JSON? {
+    subscript(key: String) -> JSONValue? {
         if case .object(let o) = self { return o[key] }
         return nil
     }
@@ -25,7 +25,7 @@ enum JSON {
     func str(_ key: String) -> String? { self[key]?.stringValue }
     func int(_ key: String) -> Int? { self[key]?.intValue }
     func int64(_ key: String) -> Int64? { self[key]?.int64Value }
-    func list(_ key: String) -> [JSON]? { self[key]?.arrayValue }
+    func list(_ key: String) -> [JSONValue]? { self[key]?.arrayValue }
     func flag(_ key: String) -> Bool {
         if case .bool(true)? = self[key] { return true }
         return false
@@ -54,7 +54,7 @@ enum JSON {
         }
     }
 
-    var arrayValue: [JSON]? {
+    var arrayValue: [JSONValue]? {
         if case .array(let a) = self { return a }
         return nil
     }
@@ -87,9 +87,9 @@ enum JSON {
         case .int(let i):
             out.append(contentsOf: Array(String(i).utf8))
         case .double(let d):
-            out.append(contentsOf: Array(JSON.format(d).utf8))
+            out.append(contentsOf: Array(JSONValue.format(d).utf8))
         case .string(let s):
-            JSON.writeString(s, into: &out)
+            JSONValue.writeString(s, into: &out)
         case .array(let a):
             out.append(UInt8(ascii: "["))
             for (i, v) in a.enumerated() {
@@ -103,7 +103,7 @@ enum JSON {
             for (k, v) in o.items {
                 if !first { out.append(UInt8(ascii: ",")) }
                 first = false
-                JSON.writeString(k, into: &out)
+                JSONValue.writeString(k, into: &out)
                 out.append(UInt8(ascii: ":"))
                 v.write(into: &out)
             }
@@ -138,7 +138,7 @@ enum JSON {
 
     // MARK: Parsing
 
-    static func parse(_ data: Data) -> JSON? {
+    static func parse(_ data: Data) -> JSONValue? {
         var p = Parser(bytes: [UInt8](data))
         p.skipSpace()
         guard let v = p.value(depth: 0) else { return nil }
@@ -146,7 +146,7 @@ enum JSON {
         return p.i == p.bytes.count ? v : nil
     }
 
-    static func parse(_ s: String) -> JSON? { parse(Text.utf8(s)) }
+    static func parse(_ s: String) -> JSONValue? { parse(AnalyticsText.utf8(s)) }
 
     private struct Parser {
         let bytes: [UInt8]
@@ -156,14 +156,14 @@ enum JSON {
             while i < bytes.count, bytes[i] == 0x20 || bytes[i] == 0x0A || bytes[i] == 0x0D || bytes[i] == 0x09 { i += 1 }
         }
 
-        mutating func literal(_ word: String, _ v: JSON) -> JSON? {
+        mutating func literal(_ word: String, _ v: JSONValue) -> JSONValue? {
             let w = Array(word.utf8)
             guard i + w.count <= bytes.count, Array(bytes[i..<(i + w.count)]) == w else { return nil }
             i += w.count
             return v
         }
 
-        mutating func value(depth: Int) -> JSON? {
+        mutating func value(depth: Int) -> JSONValue? {
             guard depth < 64, i < bytes.count else { return nil }
             switch bytes[i] {
             case UInt8(ascii: "n"): return literal("null", .null)
@@ -172,7 +172,7 @@ enum JSON {
             case UInt8(ascii: "\""): return string().map { .string($0) }
             case UInt8(ascii: "["):
                 i += 1
-                var a = [JSON]()
+                var a = [JSONValue]()
                 skipSpace()
                 if i < bytes.count, bytes[i] == UInt8(ascii: "]") { i += 1; return .array(a) }
                 while true {
@@ -210,7 +210,7 @@ enum JSON {
             }
         }
 
-        mutating func number() -> JSON? {
+        mutating func number() -> JSONValue? {
             let start = i
             var isDouble = false
             while i < bytes.count {
@@ -284,8 +284,8 @@ enum JSON {
     }
 }
 
-extension JSON: Equatable {
-    static func == (a: JSON, b: JSON) -> Bool {
+extension JSONValue: Equatable {
+    static func == (a: JSONValue, b: JSONValue) -> Bool {
         switch (a, b) {
         case (.null, .null): return true
         case (.bool(let x), .bool(let y)): return x == y
@@ -305,16 +305,16 @@ extension JSON: Equatable {
 /// An object's fields: a small ordered list. Objects hold a few keys; a linear search costs nothing there, and a
 /// dictionary per key and value type costs kilobytes of generic specialisations (§3.18).
 struct Fields: ExpressibleByDictionaryLiteral, Equatable {
-    var items: [(String, JSON)]
+    var items: [(String, JSONValue)]
 
     init() { items = [] }
-    init(items: [(String, JSON)]) { self.items = items }
-    init(dictionaryLiteral elements: (String, JSON)...) { items = elements }
+    init(items: [(String, JSONValue)]) { self.items = items }
+    init(dictionaryLiteral elements: (String, JSONValue)...) { items = elements }
 
     var count: Int { items.count }
     var isEmpty: Bool { items.isEmpty }
 
-    subscript(key: String) -> JSON? {
+    subscript(key: String) -> JSONValue? {
         get {
             for (k, v) in items where k == key { return v }
             return nil
@@ -336,13 +336,13 @@ struct Fields: ExpressibleByDictionaryLiteral, Equatable {
     }
 }
 
-extension JSON: ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, ExpressibleByArrayLiteral,
+extension JSONValue: ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, ExpressibleByArrayLiteral,
     ExpressibleByDictionaryLiteral, ExpressibleByBooleanLiteral, ExpressibleByFloatLiteral
 {
     init(stringLiteral value: String) { self = .string(value) }
     init(integerLiteral value: Int64) { self = .int(value) }
-    init(arrayLiteral elements: JSON...) { self = .array(elements) }
-    init(dictionaryLiteral elements: (String, JSON)...) { self = .object(Fields(items: elements)) }
+    init(arrayLiteral elements: JSONValue...) { self = .array(elements) }
+    init(dictionaryLiteral elements: (String, JSONValue)...) { self = .object(Fields(items: elements)) }
     init(booleanLiteral value: Bool) { self = .bool(value) }
     init(floatLiteral value: Double) { self = .double(value) }
 }

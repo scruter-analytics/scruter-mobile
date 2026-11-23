@@ -1,6 +1,6 @@
 // The plugin's native side, in Java on purpose: it builds with whatever Kotlin version the app uses.
 group 'net.scruter.flutter'
-version '1.1.0'
+version '1.2.0'
 
 buildscript {
     repositories {
@@ -21,6 +21,42 @@ rootProject.allprojects {
 
 apply plugin: 'com.android.library'
 
+/**
+ * The modules the app takes (docs/CMP-MOBILE.md §3.16, M2): the `scruter` key of its pubspec.yaml, read here, by the
+ * podspec and by Package.swift. Scruter Analytics unless `analytics: false`; Scruter CMP with `cmp: true`. An app
+ * carries only the native code of what it takes. Both forms of YAML: a block (`scruter:` then `  cmp: true`) or a flow
+ * (`scruter: { cmp: true }`).
+ */
+def scruterModules() {
+    def app = new File(rootProject.projectDir, '../pubspec.yaml')
+    def found = [:]
+    if (app.exists()) {
+        def inside = false
+        for (String raw : app.readLines('UTF-8')) {
+            def line = raw.split('#', 2)[0]
+            if (line.startsWith('scruter:')) {
+                inside = true
+                line.substring(8).replaceAll(/[{}\s]/, '').split(',').each { pair ->
+                    def kv = pair.split(':')
+                    if (kv.length == 2) found[kv[0]] = kv[1] == 'true'
+                }
+                continue
+            }
+            if (!inside || line.trim().isEmpty()) continue
+            if (!Character.isWhitespace(line.charAt(0))) break
+            def kv = line.trim().split(':').collect { it.trim() }
+            if (kv.size() == 2) found[kv[0]] = kv[1] == 'true'
+        }
+    }
+    def modules = [analytics: found.analytics != false, cmp: found.cmp == true]
+    if (!modules.analytics && !modules.cmp) {
+        throw new GradleException('[Scruter] `scruter: { analytics: false }` without `cmp: true` leaves nothing to install')
+    }
+    return modules
+}
+
+def modules = scruterModules()
+
 android {
     if (project.android.hasProperty('namespace')) {
         namespace 'net.scruter.flutter'
@@ -34,8 +70,16 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
+    sourceSets {
+        main {
+            java.srcDirs += [modules.analytics ? 'src/analytics/java' : 'src/analytics-off/java']
+            java.srcDirs += [modules.cmp ? 'src/cmp/java' : 'src/cmp-off/java']
+        }
+    }
 }
 
 dependencies {
-    implementation 'net.scruter:scruter-android:1.1.0'
+    if (modules.analytics) implementation 'net.scruter:scruter-android:1.2.0'
+    if (modules.cmp) implementation 'net.scruter:scruter-cmp:1.2.0'
 }

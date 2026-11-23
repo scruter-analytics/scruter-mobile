@@ -5,7 +5,7 @@ import Foundation
 final class Team {
     static let tokenKey = "team_device_token"
 
-    let env: Environment
+    let env: AnalyticsEnvironment
     let options: StartOptions
     private(set) var deviceToken: String?
     private var allowed = false
@@ -23,7 +23,7 @@ final class Team {
     /// Called on the engine's queue when the phone joins or leaves team mode.
     var onChange: ((Bool) -> Void)?
 
-    init(env: Environment, options: StartOptions) {
+    init(env: AnalyticsEnvironment, options: StartOptions) {
         self.env = env
         self.options = options
         deviceToken = env.secrets.get(Team.tokenKey)
@@ -62,20 +62,20 @@ final class Team {
         var o = extra
         o["app"] = .string(options.appId)
         o["platform"] = .string(device.platform)
-        o["model"] = .string(Text.cut(device.model.isEmpty ? "unknown" : device.model, max: 60))
-        o["os"] = .string(Text.cut(device.os.isEmpty ? "0" : device.os, max: 20))
+        o["model"] = .string(AnalyticsText.cut(device.model.isEmpty ? "unknown" : device.model, max: 60))
+        o["os"] = .string(AnalyticsText.cut(device.os.isEmpty ? "0" : device.os, max: 20))
         o["form"] = .string(device.form)
-        o["app_version"] = .string(Text.cut(device.appVersion.isEmpty ? "0" : device.appVersion, max: 40))
+        o["app_version"] = .string(AnalyticsText.cut(device.appVersion.isEmpty ? "0" : device.appVersion, max: 40))
         o["build_kind"] = .string(device.buildKind)
         registering = true
         let url = options.apiEndpoint.appendingPathComponent("m/v1/team/register")
         env.http.send(
             HTTPRequest(
-                method: "POST", url: url, headers: ["Content-Type": "application/json"], body: JSON.object(o).encoded())
+                method: "POST", url: url, headers: ["Content-Type": "application/json"], body: JSONValue.object(o).encoded())
         ) { [weak self] r in
             guard let self = self else { return }
             self.registering = false
-            guard r?.status == 201, let j = r.flatMap({ JSON.parse($0.body) }),
+            guard r?.status == 201, let j = r.flatMap({ JSONValue.parse($0.body) }),
                 let t = j.str("device_token"), t.hasPrefix("scr_tp_")
             else {
                 self.env.log.log("team phone registration refused, status", String(r?.status ?? 0))
@@ -120,7 +120,7 @@ final class Team {
                 self.leave()
                 return
             }
-            guard r?.status == 200, let j = r.flatMap({ JSON.parse($0.body) }) else { return }
+            guard r?.status == 200, let j = r.flatMap({ JSONValue.parse($0.body) }) else { return }
             self.captured = (j.list("captured") ?? []).compactMap { $0.stringValue }
             self.retake = (j.list("retake") ?? []).compactMap { $0.stringValue }
             self.maxBytes = max(100_000, min(2_000_000, j.int("max_bytes") ?? 2_000_000))
@@ -145,7 +145,7 @@ final class Team {
     // MARK: Upload
 
     /// Uploads a screen image and its element tree (`POST /m/v1/team/screens`, multipart).
-    func upload(screen: String, meta: JSON, jpeg: Data, tree: JSON, completion: ((Bool) -> Void)? = nil) {
+    func upload(screen: String, meta: JSONValue, jpeg: Data, tree: JSONValue, completion: ((Bool) -> Void)? = nil) {
         guard let token = deviceToken, jpeg.count <= maxBytes else {
             completion?(false)
             return
@@ -188,30 +188,30 @@ final class Team {
     static func multipart(boundary: String, parts: [(String, String?, String, Data)]) -> Data {
         var d = Data()
         for (name, file, type, data) in parts {
-            d.append(Text.utf8("--\(boundary)\r\n"))
+            d.append(AnalyticsText.utf8("--\(boundary)\r\n"))
             var disposition = "Content-Disposition: form-data; name=\"\(name)\""
             if let f = file { disposition += "; filename=\"\(f)\"" }
-            d.append(Text.utf8("\(disposition)\r\nContent-Type: \(type)\r\n\r\n"))
+            d.append(AnalyticsText.utf8("\(disposition)\r\nContent-Type: \(type)\r\n\r\n"))
             d.append(data)
-            d.append(Text.utf8("\r\n"))
+            d.append(AnalyticsText.utf8("\r\n"))
         }
-        d.append(Text.utf8("--\(boundary)--\r\n"))
+        d.append(AnalyticsText.utf8("--\(boundary)--\r\n"))
         return d
     }
 
     /// The `meta` part of an upload.
     static func meta(
         screen: String, device: DeviceInfo, width: Int, height: Int, scale: Double, takenAt: Date
-    ) -> JSON {
+    ) -> JSONValue {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = TimeZone(identifier: "UTC")
         f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         return [
-            "screen": .string(Text.cut(screen, max: 120)), "app_version": .string(Text.cut(device.appVersion, max: 40)),
+            "screen": .string(AnalyticsText.cut(screen, max: 120)), "app_version": .string(AnalyticsText.cut(device.appVersion, max: 40)),
             "platform": .string(device.platform), "form": .string(device.form), "width": .int(Int64(width)),
             "height": .int(Int64(height)), "scale": .double(scale), "taken_at": .string(f.string(from: takenAt)),
-            "model": .string(Text.cut(device.model, max: 60)), "os": .string(Text.cut(device.os, max: 20)),
+            "model": .string(AnalyticsText.cut(device.model, max: 60)), "os": .string(AnalyticsText.cut(device.os, max: 20)),
         ]
     }
 }

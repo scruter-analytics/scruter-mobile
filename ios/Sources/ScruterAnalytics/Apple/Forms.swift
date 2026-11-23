@@ -94,7 +94,7 @@ final class FormTracker {
         } else {
             key = "\(type):\(position)"
         }
-        return Field(form: form, key: Text.cut(key, max: 100), type: type)
+        return Field(form: form, key: AnalyticsText.cut(key, max: 100), type: type)
     }
 
     private func formName(of v: UIView, markers: [ScruterMarkerView]) -> String? {

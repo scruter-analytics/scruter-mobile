@@ -48,7 +48,7 @@ final class ApplePlatform: NSObject {
 
     // MARK: Environment
 
-    static func makeEnvironment(options: StartOptions, queue: DispatchQueue, facts: MainFacts) -> Environment {
+    static func makeEnvironment(options: StartOptions, queue: DispatchQueue, facts: MainFacts) -> AnalyticsEnvironment {
         let fm = FileManager.default
         let support = (try? fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
             ?? fm.temporaryDirectory
@@ -58,7 +58,7 @@ final class ApplePlatform: NSObject {
         log.sink = { os_log("%{public}@", log: osLog, type: .default, $0) }
         var device = Device.info(form: facts.form, testBuild: options.testBuild)
         device.containerCreatedMs = Device.containerCreated()
-        let env = Environment(
+        let env = AnalyticsEnvironment(
             scheduler: QueueScheduler(queue: queue), http: URLSessionHTTPClient(queue: queue), store: store,
             secrets: KeychainSecretStore(service: "net.scruter.analytics." + options.appId), log: log, device: device)
         env.confirmTeamPhone = { done in DispatchQueue.main.async { ApplePlatform.askTeamPhone(attempts: 8, done: done) } }
@@ -254,7 +254,7 @@ final class KeychainSecretStore: SecretStore {
         SecItemDelete(query(key) as CFDictionary)
         guard let v = value else { return }
         var q = query(key)
-        q[kSecValueData as String] = Text.utf8(v)
+        q[kSecValueData as String] = AnalyticsText.utf8(v)
         q[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         SecItemAdd(q as CFDictionary, nil)
     }

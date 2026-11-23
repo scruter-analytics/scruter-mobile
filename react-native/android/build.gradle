@@ -7,6 +7,23 @@ def safeExt(String name, Object fallback) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : fallback
 }
 
+/**
+ * The modules the app takes (docs/CMP-MOBILE.md §3.16, M2): its package.json's "scruter" key, read here and by
+ * ScruterReactNative.podspec. Scruter Analytics unless "analytics": false; Scruter CMP with "cmp": true. An app carries
+ * only the native code of what it takes.
+ */
+def scruterModules() {
+  def app = new File(rootProject.projectDir, '../package.json')
+  def config = app.exists() ? (new groovy.json.JsonSlurper().parse(app).scruter ?: [:]) : [:]
+  def modules = [analytics: config.analytics != false, cmp: config.cmp == true]
+  if (!modules.analytics && !modules.cmp) {
+    throw new GradleException('[Scruter] "scruter": { "analytics": false } without "cmp": true leaves nothing to install')
+  }
+  return modules
+}
+
+def modules = scruterModules()
+
 def reactNativeMinor() {
   def file = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
   def version = new groovy.json.JsonSlurper().parse(file).version
@@ -32,6 +49,8 @@ android {
     main {
       // BaseReactPackage came in 0.74; TurboReactPackage is what 0.73 has, deprecated since.
       java.srcDirs += [reactNativeMinor() >= 74 ? 'src/rn74/java' : 'src/rn73/java']
+      java.srcDirs += [modules.analytics ? 'src/analytics/java' : 'src/analytics-off/java']
+      java.srcDirs += [modules.cmp ? 'src/cmp/java' : 'src/cmp-off/java']
     }
   }
 
@@ -52,6 +71,7 @@ repositories {
 dependencies {
   implementation 'com.facebook.react:react-android'
   // implementation: the app's own compiler, which can be older than the SDK's, never reads the SDK's Kotlin metadata.
-  implementation 'net.scruter:scruter-android:1.1.0'
+  if (modules.analytics) implementation 'net.scruter:scruter-android:1.2.0'
+  if (modules.cmp) implementation 'net.scruter:scruter-cmp:1.2.0'
   testImplementation 'junit:junit:4.13.2'
 }

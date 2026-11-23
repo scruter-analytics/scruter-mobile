@@ -24,7 +24,7 @@ https://github.com/scruter-analytics/scruter-mobile
 and add the **ScruterAnalytics** product to your app target. In a `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.1.0"),
+.package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.2.0"),
 // …
 .product(name: "ScruterAnalytics", package: "scruter-mobile"),
 ```
@@ -33,7 +33,7 @@ and add the **ScruterAnalytics** product to your app target. In a `Package.swift
 git source needs no trunk):
 
 ```ruby
-pod 'Scruter', :git => 'https://github.com/scruter-analytics/scruter-mobile', :tag => '1.1.0'
+pod 'Scruter', :git => 'https://github.com/scruter-analytics/scruter-mobile', :tag => '1.2.0'
 ```
 
 ## Start: three lines
@@ -96,7 +96,7 @@ Scruter.track("Order placed", revenue: 49.0, currency: "EUR")
 
 Names ≤ 120 characters; ≤ 30 properties (strings, numbers, booleans; keys ≤ 300, values ≤ 2 000 characters). Revenue
 counts only with its ISO 4217 currency. **Never put personal data in names or properties** (an e-mail address, a name,
-an order number): the server masks e-mail addresses and long numbers anyway. Goals are created in Scruter on these
+an order number): the server masks e-mail addresses anyway. Goals are created in Scruter on these
 names.
 
 ## Links and openings

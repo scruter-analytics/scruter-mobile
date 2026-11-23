@@ -73,7 +73,7 @@ final class TeamTests: XCTestCase {
         h.advance(seconds: 0)
         let reg = try XCTUnwrap(h.http.requests.first { $0.url.path.hasSuffix("register") })
         XCTAssertEqual(reg.url.absoluteString, "https://api.scruter.net/m/v1/team/register")
-        let body = try XCTUnwrap(reg.body.flatMap(JSON.parse))
+        let body = try XCTUnwrap(reg.body.flatMap(JSONValue.parse))
         XCTAssertEqual(body["build_kind"], "testflight")
         Harness.export(body, name: "team-register-qr")
         XCTAssertTrue(e.team.isActive)
@@ -92,7 +92,7 @@ final class TeamTests: XCTestCase {
         // Upload.
         var ok = false
         let meta = Team.meta(screen: "Shop", device: h.device, width: 786, height: 4280, scale: 2, takenAt: Date())
-        let tree: JSON = ["v": 1, "nodes": [["s": "#add_to_cart", "i": 0, "k": "button", "x": 24, "y": 1180, "w": 345, "h": 48, "l": "Add to cart", "m": 0], ["s": "UITextField", "i": 0, "k": "input", "x": 24, "y": 1300, "w": 345, "h": 44, "m": 1]]]
+        let tree: JSONValue = ["v": 1, "nodes": [["s": "#add_to_cart", "i": 0, "k": "button", "x": 24, "y": 1180, "w": 345, "h": 48, "l": "Add to cart", "m": 0], ["s": "UITextField", "i": 0, "k": "input", "x": 24, "y": 1300, "w": 345, "h": 44, "m": 1]]]
         Harness.export(meta, name: "team-meta")
         Harness.export(tree, name: "team-tree")
         e.team.upload(screen: "Shop", meta: meta, jpeg: Data([0xFF, 0xD8, 0xFF, 0xD9]), tree: tree) { ok = $0 }
@@ -121,7 +121,7 @@ final class TeamTests: XCTestCase {
         debug.options.debugKey = key
         let e = debug.boot()
         let reg = try XCTUnwrap(debug.http.requests.first { $0.url.path.hasSuffix("register") })
-        let body = try XCTUnwrap(reg.body.flatMap(JSON.parse))
+        let body = try XCTUnwrap(reg.body.flatMap(JSONValue.parse))
         XCTAssertEqual(body["debug_key"]?.stringValue, key)
         XCTAssertEqual(body["build_kind"], "debug")
         Harness.export(body, name: "team-register-debug")

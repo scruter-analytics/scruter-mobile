@@ -11,7 +11,7 @@ plugins {
     signing
 }
 
-val sdkVersion = "1.1.0"
+val sdkVersion = "1.2.0"
 
 android {
     namespace = "net.scruter"

@@ -5,7 +5,7 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 validator="$here/../protocol/validate.mjs"
 shopt -s nullglob
-files=("$here"/scruter-android/build/conformance/*.json "$here"/sample/build/conformance/*.json)
+files=("$here"/scruter-android/build/conformance/*.json "$here"/sample/build/conformance/*.json "$here"/scruter-cmp/build/conformance/*.json)
 if (( ${#files[@]} == 0 )); then
   echo "no recorded payload: run the unit tests first" >&2
   exit 1

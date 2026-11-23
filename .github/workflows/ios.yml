@@ -70,7 +70,9 @@ jobs:
 
       - name: SDK tests on the iOS simulator (Swift Package Manager)
         run: |
-          xcodebuild test -scheme ScruterAnalytics -destination "id=${{ steps.sim.outputs.udid }}" \
+          # The package has two products since ScruterCMP: its tests are in the package's scheme.
+          xcodebuild test -scheme ScruterAnalytics-Package -only-testing:ScruterAnalyticsTests \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
             -skipPackagePluginValidation -quiet
 
       - name: Example app tests (UIKit, SwiftUI, captures, crash handler)

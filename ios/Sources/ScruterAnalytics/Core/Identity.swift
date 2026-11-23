@@ -83,7 +83,7 @@ enum Identity {
         while s.hasPrefix("_") { s.removeFirst() }
         s = s.filter { !$0.isWhitespace }
         if s.isEmpty { s = "View" }
-        return Text.cut(s, max: 40)
+        return AnalyticsText.cut(s, max: 40)
     }
 
     /// The node's own part: `#id`, else its type name (plus `[kind]` when the type says nothing).
@@ -271,7 +271,7 @@ enum Identity {
             p.removeFirst()
             s = p.joined(separator: "/")
         }
-        return Text.cut(s, max: maxSelector)
+        return AnalyticsText.cut(s, max: maxSelector)
     }
 }
 
@@ -292,13 +292,13 @@ enum ScreenName {
             s = String(s.dropLast(suffix.count))
             break
         }
-        return Text.clean(s, max: maxLength)
+        return AnalyticsText.clean(s, max: maxLength)
     }
 
     /// A name given by the app (`Scruter.screen`, `.scruterScreen`, `scruterScreenName`): ≤ 120 characters, trimmed,
     /// control characters removed; `nil` when nothing is left.
     static func explicit(_ name: String) -> String? {
-        let n = Text.clean(name, max: maxLength)
+        let n = AnalyticsText.clean(name, max: maxLength)
         return n.isEmpty ? nil : n
     }
 }

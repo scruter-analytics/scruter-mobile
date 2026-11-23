@@ -1,0 +1,148 @@
+# The example apps of Scruter CMP for iOS (docs/CMP-MOBILE.md §9.2): a SwiftUI app (automatic presentation) and a
+# UIKit app (manual presentation after an onboarding), both with the settings entry, SDKs gated on the answer and ATT
+# after the CMP; their UI tests against a local ingest (ios/scripts/cmp_stub_ingest.py) and the sheet's snapshot tests.
+# Generate the Xcode project with XcodeGen (https://github.com/yonaskolb/XcodeGen): `xcodegen` in this directory.
+# The module's sources are compiled here as one framework (as CocoaPods builds the pod); apps integrate it through
+# Swift Package Manager or CocoaPods (../CMP.md).
+name: ScruterCMPExample
+options:
+  bundleIdPrefix: net.scruter
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  ScruterCMP:
+    type: framework
+    platform: iOS
+    sources:
+      - path: ../Sources/ScruterCMP
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.cmp
+        PRODUCT_NAME: ScruterCMP
+        DEFINES_MODULE: YES
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: NO
+  CMPExample:
+    type: application
+    platform: iOS
+    sources:
+      - path: SwiftUIApp
+      - path: Shared
+    dependencies:
+      - target: ScruterCMP
+    info:
+      path: SwiftUIApp/Info.plist
+      properties:
+        CFBundleDisplayName: Atelier
+        CFBundleShortVersionString: "2.3.0"
+        CFBundleVersion: "230"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSUserTrackingUsageDescription: To show you ads for our pieces that take into account what you liked.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.example.cmp
+        TARGETED_DEVICE_FAMILY: "1,2"
+  CMPExampleUIKit:
+    type: application
+    platform: iOS
+    sources:
+      - path: UIKitApp
+      - path: Shared
+    dependencies:
+      - target: ScruterCMP
+    info:
+      path: UIKitApp/Info.plist
+      properties:
+        CFBundleDisplayName: Atelier UIKit
+        CFBundleShortVersionString: "2.3.0"
+        CFBundleVersion: "230"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.example.cmp.uikit
+        TARGETED_DEVICE_FAMILY: "1,2"
+  CMPExampleUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: CMPExample
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.example.cmp.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: CMPExample
+  CMPExampleUIKitUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UIKitUITests
+      - path: UITests/Audit.swift
+    dependencies:
+      - target: CMPExampleUIKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.example.cmp.uikit.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: CMPExampleUIKit
+  CMPSnapshotTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: SnapshotTests
+    dependencies:
+      - target: CMPExample
+      - target: ScruterCMP
+        embed: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.scruter.example.cmp.snapshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CMPExample.app/CMPExample"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  CMPExample:
+    build:
+      targets:
+        CMPExample: all
+        CMPExampleUITests: [test]
+        CMPSnapshotTests: [test]
+    test:
+      config: Debug
+      targets: [CMPSnapshotTests, CMPExampleUITests]
+      gatherCoverageData: false
+  CMPSnapshots:
+    build:
+      targets:
+        CMPExample: all
+        CMPSnapshotTests: [test]
+    test:
+      config: Debug
+      targets: [CMPSnapshotTests]
+      gatherCoverageData: false
+  CMPExampleUIKit:
+    build:
+      targets:
+        CMPExampleUIKit: all
+        CMPExampleUIKitUITests: [test]
+    test:
+      config: Debug
+      targets: [CMPExampleUIKitUITests]
+      gatherCoverageData: false

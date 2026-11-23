@@ -59,5 +59,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>To show you ads about the bowls you liked.</string>
 </dict>
 </plist>

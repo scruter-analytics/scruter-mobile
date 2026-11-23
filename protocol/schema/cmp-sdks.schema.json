@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scruter.net/schemas/mobile/v1/cmp-sdks.schema.json",
+  "title": "POST /m/v1/cmp/sdks (the third-party SDKs an app version links)",
+  "description": "docs/CMP-MOBILE.md §3.14, §4.3. Sent once per (app version, catalogue version); keys of the catalogue only.",
+  "type": "object",
+  "required": ["a", "p", "av", "c", "k"],
+  "additionalProperties": false,
+  "properties": {
+    "a": {"type": "string", "pattern": "^[A-Z0-9]{4,16}$"},
+    "p": {"enum": ["ios", "android"]},
+    "av": {"type": "string", "minLength": 1, "maxLength": 40},
+    "c": {"type": "integer", "minimum": 1},
+    "k": {"type": "array", "maxItems": 200, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,39}$"}}
+  }
+}

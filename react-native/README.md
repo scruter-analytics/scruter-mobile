@@ -14,6 +14,10 @@ JavaScript adds what they cannot see: your routes, your JavaScript errors and ho
 
 React Native 0.73 and later, new and old architecture, Hermes and JavaScriptCore. iOS 15, Android 7 (API 24). MIT.
 
+The same package carries **Scruter CMP**, the consent sheet of [Scruter CMP](https://scruter.net/cmp) with the proof of
+every choice, for an app that takes it (`"scruter": { "cmp": true }` in its `package.json`): see [CMP.md](CMP.md). An app
+carries only the native code of the modules it takes; without that key, nothing changes.
+
 ## Install
 
 ```sh
@@ -87,6 +91,17 @@ export default function RootLayout() {
 }
 ```
 
+Expo Router also opens the links the app receives, the team phones' QR code among them, which it does not know (an
+« Unmatched Route » page). Leave that link to the SDK with `app/+native-intent.tsx`; if the app already has this file, add
+the `if` line at the top of its function:
+
+```tsx
+export function redirectSystemPath({ path, initial }: { path: string; initial: boolean }) {
+  if (/^scruter-[a-z0-9]+:/i.test(path)) return initial ? '/' : null;
+  return path;
+}
+```
+
 With Expo Router the name is the route's file pattern (`product/[id]`); a folder's `index` takes the folder's name
 (`shop`).
 
@@ -121,7 +136,7 @@ Scruter.track('Order placed', { revenue: 49.0, currency: 'EUR' });
 
 Names ≤ 120 characters; ≤ 30 properties (strings, numbers, booleans; keys ≤ 300, values ≤ 2 000 characters). Revenue
 counts only with its ISO 4217 currency. **Never put personal data in a name or a property**: the server masks e-mail
-addresses and long numbers anyway.
+addresses anyway.
 
 ## Taps, scroll, time per block, forms
 

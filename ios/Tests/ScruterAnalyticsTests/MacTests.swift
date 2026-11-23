@@ -97,7 +97,7 @@ final class MacPlatformTests: XCTestCase {
         device.language = "fr"
         let store = FileStore(directory: dir)
         Runtime.shared.makeEnvironment = { _ in
-            Environment(
+            AnalyticsEnvironment(
                 now: { scheduler.now }, scheduler: scheduler, http: http, store: store,
                 secrets: FileSecretStore(store: store), device: device)
         }

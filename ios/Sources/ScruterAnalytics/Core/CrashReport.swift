@@ -30,7 +30,7 @@ enum CrashReport {
         var code = ""
         var signal = ""
         var reason = ""
-        var context: JSON = .object(Fields())
+        var context: JSONValue = .object(Fields())
         var threads: [Thread] = []
         var images: [Image] = []
     }
@@ -54,7 +54,7 @@ enum CrashReport {
             case "code": raw.code = value
             case "sig": raw.signal = value
             case "reason": raw.reason = value
-            case "ctx": raw.context = JSON.parse(value) ?? .object(Fields())
+            case "ctx": raw.context = JSONValue.parse(value) ?? .object(Fields())
             case "thread":
                 let flags = value.components(separatedBy: " ")
                 raw.threads.append(Thread(crashed: flags[0] == "1", main: flags.count > 1 && flags[1] == "1", addresses: []))
@@ -87,7 +87,7 @@ enum CrashReport {
     static func hex(_ v: UInt64) -> String { "0x" + String(v, radix: 16) }
 
     /// The `cr` item of a raw report, for session `session` (from the report's context when nil).
-    static func item(from raw: Raw, id: String = Random.hex(bytes: 8)) -> JSON? {
+    static func item(from raw: Raw, id: String = Random.hex(bytes: 8)) -> JSONValue? {
         guard let session = raw.context.str("s"), session.count == 16 else { return nil }
         var used = [Int]()
         func imageIndex(_ a: UInt64) -> Int? {
@@ -97,10 +97,10 @@ enum CrashReport {
             used.append(i)
             return used.count - 1
         }
-        var threads = [JSON]()
+        var threads = [JSONValue]()
         let ordered = raw.threads.filter { $0.crashed } + raw.threads.filter { !$0.crashed }
         for t in ordered.prefix(2) where !t.addresses.isEmpty {
-            let frames: [JSON] = t.addresses.prefix(maxFrames).map { a in
+            let frames: [JSONValue] = t.addresses.prefix(maxFrames).map { a in
                 var f: Fields = ["a": .string(hex(a))]
                 if let i = imageIndex(a) {
                     f["i"] = .int(Int64(i))
@@ -111,25 +111,25 @@ enum CrashReport {
             threads.append(["c": .int(t.crashed ? 1 : 0), "m": .int(t.main ? 1 : 0), "f": .array(frames)])
         }
         guard !threads.isEmpty else { return nil }
-        let images: [JSON] = used.map { i in
+        let images: [JSONValue] = used.map { i in
             let im = raw.images[i]
             return [
-                "n": .string(Text.cut(im.name, max: 200)), "u": .string(Text.cut(im.uuid, max: 100)),
-                "la": .string(hex(im.load)), "ar": .string(Text.cut(im.arch, max: 20)),
+                "n": .string(AnalyticsText.cut(im.name, max: 200)), "u": .string(AnalyticsText.cut(im.uuid, max: 100)),
+                "la": .string(hex(im.load)), "ar": .string(AnalyticsText.cut(im.arch, max: 20)),
             ]
         }
         var ex: Fields = [:]
-        if !raw.type.isEmpty { ex["type"] = .string(Text.cut(raw.type, max: 200)) }
-        if !raw.code.isEmpty { ex["code"] = .string(Text.cut(raw.code, max: 200)) }
-        if !raw.signal.isEmpty { ex["sig"] = .string(Text.cut(raw.signal, max: 20)) }
-        if !raw.reason.isEmpty { ex["reason"] = .string(Text.clean(raw.reason, max: 200)) }
+        if !raw.type.isEmpty { ex["type"] = .string(AnalyticsText.cut(raw.type, max: 200)) }
+        if !raw.code.isEmpty { ex["code"] = .string(AnalyticsText.cut(raw.code, max: 200)) }
+        if !raw.signal.isEmpty { ex["sig"] = .string(AnalyticsText.cut(raw.signal, max: 20)) }
+        if !raw.reason.isEmpty { ex["reason"] = .string(AnalyticsText.clean(raw.reason, max: 200)) }
         var o: Fields = [
             "s": .string(session), "id": .string(id), "t": .int(raw.time), "k": .string(raw.kind), "src": "native",
             "ex": .object(ex), "th": .array(threads), "img": .array(images),
         ]
         let crumbs = (raw.context.list("bc") ?? []).compactMap(Breadcrumb.init(json:)).suffix(maxBreadcrumbs)
         o["bc"] = .array(crumbs.map { $0.json })
-        o["scr"] = .string(Text.cut(raw.context.str("scr") ?? "", max: 120))
+        o["scr"] = .string(AnalyticsText.cut(raw.context.str("scr") ?? "", max: 120))
         o["fg"] = .int(raw.context.int("fg") == 0 ? 0 : 1)
         if let launch = raw.context.int64("lt"), raw.time >= launch { o["up"] = .int(raw.time - launch) }
         return .object(o)
@@ -142,7 +142,7 @@ enum CrashReport {
         var kind: String
         var time: Int64
         /// MetricKit's `callStackTree.jsonRepresentation()`, parsed.
-        var callStackTree: JSON
+        var callStackTree: JSONValue
         var exceptionType: Int?
         var exceptionCode: Int?
         var signal: Int?
@@ -153,13 +153,13 @@ enum CrashReport {
     static func item(
         from d: Diagnostic, session: String, screen: String, breadcrumbs: [Breadcrumb], inApp: (String) -> Bool,
         id: String = Random.hex(bytes: 8)
-    ) -> JSON? {
+    ) -> JSONValue? {
         let stacks = d.callStackTree.list("callStacks") ?? []
         let attributed = stacks.first { $0.flag("threadAttributed") } ?? stacks.first
         guard let stack = attributed, let root = stack.list("callStackRootFrames")?.first else { return nil }
         var images = [Image]()
-        var frames = [JSON]()
-        var frame: JSON? = root
+        var frames = [JSONValue]()
+        var frame: JSONValue? = root
         while let f = frame, frames.count < maxFrames {
             guard let address = f.int64("address").map({ UInt64(bitPattern: $0) }) else { break }
             var out: Fields = ["a": .string(hex(address))]
@@ -185,7 +185,7 @@ enum CrashReport {
         if let t = d.exceptionType { ex["type"] = .string(machExceptionName(t)) }
         if let c = d.exceptionCode { ex["code"] = .string(String(c)) }
         if let s = d.signal { ex["sig"] = .string(signalName(s)) }
-        if let r = d.reason, !r.isEmpty { ex["reason"] = .string(Text.clean(r, max: 200)) }
+        if let r = d.reason, !r.isEmpty { ex["reason"] = .string(AnalyticsText.clean(r, max: 200)) }
         if d.kind == "anr" && ex["type"] == nil { ex["type"] = "Hang" }
         return .object([
             "s": .string(session), "id": .string(id), "t": .int(d.time), "k": .string(d.kind), "src": "native",
@@ -193,10 +193,10 @@ enum CrashReport {
             "th": .array([["c": 1, "m": .int(d.kind == "anr" ? 1 : 0), "f": .array(frames)]]),
             "img": .array(
                 images.map {
-                    ["n": .string(Text.cut($0.name, max: 200)), "u": .string($0.uuid), "la": .string(hex($0.load))]
+                    ["n": .string(AnalyticsText.cut($0.name, max: 200)), "u": .string($0.uuid), "la": .string(hex($0.load))]
                 }),
             "bc": .array(breadcrumbs.suffix(maxBreadcrumbs).map { $0.json }),
-            "scr": .string(Text.cut(screen, max: 120)), "fg": 1,
+            "scr": .string(AnalyticsText.cut(screen, max: 120)), "fg": 1,
         ])
     }
 
@@ -233,12 +233,12 @@ enum CrashReport {
 
     /// The report's signature for de-duplication: kind + the first five in-app frames (image UUID + offset), else
     /// the first five frames — what the server's raw signature uses (docs/MOBILE.md §6.6).
-    static func signature(_ item: JSON) -> String {
+    static func signature(_ item: JSONValue) -> String {
         let images = item.list("img") ?? []
         let threads = item.list("th") ?? []
         let crashed = threads.first { $0.int("c") == 1 } ?? threads.first
         let frames = crashed?.list("f") ?? []
-        func key(_ f: JSON) -> String {
+        func key(_ f: JSONValue) -> String {
             guard let a = f.str("a").flatMap(hexValue) else { return "?" }
             if let i = f.int("i"), i < images.count, let u = images[i].str("u"),
                 let la = images[i].str("la").flatMap(hexValue)
@@ -253,7 +253,7 @@ enum CrashReport {
     }
 
     /// Two reports are the same crash when their times are within ± 2 s and their signatures match.
-    static func isDuplicate(_ a: JSON, of b: JSON) -> Bool {
+    static func isDuplicate(_ a: JSONValue, of b: JSONValue) -> Bool {
         guard a["k"] == b["k"], let ta = a.int64("t"), let tb = b.int64("t") else { return false }
         return abs(ta - tb) <= 2000 && signature(a) == signature(b)
     }

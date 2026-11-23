@@ -25,12 +25,12 @@ struct RemoteConfig {
     static let defaults = RemoteConfig()
 
     /// Parses an answer; `nil` when it is not a configuration (then the cached copy stays).
-    static func parse(_ json: JSON, fetchedAt: Int64) -> RemoteConfig? {
+    static func parse(_ json: JSONValue, fetchedAt: Int64) -> RemoteConfig? {
         guard json.int("v") == 1, let on = json.int("on"), let e = json.str("e"), !e.isEmpty
         else { return nil }
         var c = RemoteConfig()
         c.on = on == 1
-        c.etag = Text.cut(e, max: 64)
+        c.etag = AnalyticsText.cut(e, max: 64)
         c.timeZone = json.str("tz")
         c.aa = max(0, min(100, json.int("aa") ?? 0))
         c.crashes = (json.int("cr") ?? 1) == 1
@@ -41,7 +41,7 @@ struct RemoteConfig {
         return c
     }
 
-    var json: JSON {
+    var json: JSONValue {
         var o: Fields = [
             "v": 1, "on": .int(on ? 1 : 0), "e": .string(etag), "aa": .int(Int64(aa)), "cr": .int(crashes ? 1 : 0),
             "xs": .array(ignoredScreens.map { .string($0) }), "tp": .int(teamPhones ? 1 : 0), "ttl": .int(Int64(ttl)),
@@ -51,7 +51,7 @@ struct RemoteConfig {
         return .object(o)
     }
 
-    static func fromCache(_ json: JSON) -> RemoteConfig? {
+    static func fromCache(_ json: JSONValue) -> RemoteConfig? {
         parse(json, fetchedAt: json.int64("fetched_at") ?? 0)
     }
 
@@ -60,7 +60,7 @@ struct RemoteConfig {
     }
 
     func ignores(screen: String) -> Bool {
-        ignoredScreens.contains { Text.wildcard($0, matches: screen) }
+        ignoredScreens.contains { AnalyticsText.wildcard($0, matches: screen) }
     }
 
     /// The server's sampling rule: a session collects Advanced analytics when `session_id mod 100 < aa`.

@@ -81,7 +81,7 @@ final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber {
         for payload in payloads {
             let time = Int64(payload.timeStampEnd.timeIntervalSince1970 * 1000)
             for c in payload.crashDiagnostics ?? [] {
-                guard let tree = JSON.parse(c.callStackTree.jsonRepresentation()) else { continue }
+                guard let tree = JSONValue.parse(c.callStackTree.jsonRepresentation()) else { continue }
                 var reason: String?
                 if #available(iOS 17.0, macOS 14.0, *), let r = c.exceptionReason {
                     reason = r.className + ": " + r.composedMessage
@@ -94,7 +94,7 @@ final class MetricKitSubscriber: NSObject, MXMetricManagerSubscriber {
                         exceptionCode: c.exceptionCode?.intValue, signal: c.signal?.intValue, reason: reason))
             }
             for h in payload.hangDiagnostics ?? [] {
-                guard let tree = JSON.parse(h.callStackTree.jsonRepresentation()) else { continue }
+                guard let tree = JSONValue.parse(h.callStackTree.jsonRepresentation()) else { continue }
                 diagnostics.append(
                     CrashReport.Diagnostic(
                         kind: "anr", time: time, callStackTree: tree, exceptionType: nil, exceptionCode: nil, signal: nil,

@@ -1,0 +1,679 @@
+{
+ "description": "The Android half of the detected-SDK catalogue (docs/CMP-MOBILE.md §3.14): the class names of backend/crates/cmp/data/app_sdks.json (scripts/check-sdk-catalogue.py keeps them equal in the monorepo), where each SDK's current release is published (maven) and its older majors (legacyMaven, a coordinate with a version naming that release), and the names only an older major version has (legacy). scripts/check-sdk-catalogue.py looks for every name in the SDK's current release; the module's consumer rules keep these names (and nothing else of the app) so that R8 does not rename them.",
+ "version": 2,
+ "repositories": [
+  "https://dl.google.com/dl/android/maven2",
+  "https://repo1.maven.org/maven2",
+  "https://jitpack.io",
+  "https://maven.singular.net",
+  "https://sdk-download.airbridge.io/maven",
+  "https://android-sdk.is.com",
+  "https://cboost.jfrog.io/artifactory/chartboost-ads",
+  "https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea",
+  "https://artifact.bytedance.com/repository/pangle",
+  "https://packagecloud.io/smartadserver/android/maven2",
+  "https://maven.ogury.co",
+  "https://teads.jfrog.io/artifactory/SDKAndroid-maven-prod",
+  "https://storage.googleapis.com/snap-kit-build/maven",
+  "https://sdk.uxcam.com/android",
+  "https://maven.fullstory.com",
+  "https://storage.googleapis.com/logrocket-maven",
+  "https://sdk.tapjoy.com",
+  "https://sdk.smartlook.com/android/release",
+  "https://appboy.github.io/appboy-android-sdk/sdk"
+ ],
+ "sdks": [
+  {
+   "k": "firebase_analytics",
+   "android": [
+    "com.google.firebase.analytics.FirebaseAnalytics"
+   ],
+   "maven": [
+    "com.google.firebase:firebase-analytics"
+   ]
+  },
+  {
+   "k": "firebase_crashlytics",
+   "android": [
+    "com.google.firebase.crashlytics.FirebaseCrashlytics"
+   ],
+   "maven": [
+    "com.google.firebase:firebase-crashlytics"
+   ]
+  },
+  {
+   "k": "firebase_performance",
+   "android": [
+    "com.google.firebase.perf.FirebasePerformance"
+   ],
+   "maven": [
+    "com.google.firebase:firebase-perf"
+   ]
+  },
+  {
+   "k": "firebase_messaging",
+   "android": [
+    "com.google.firebase.messaging.FirebaseMessaging"
+   ],
+   "maven": [
+    "com.google.firebase:firebase-messaging"
+   ]
+  },
+  {
+   "k": "firebase_in_app_messaging",
+   "android": [
+    "com.google.firebase.inappmessaging.FirebaseInAppMessaging"
+   ],
+   "maven": [
+    "com.google.firebase:firebase-inappmessaging"
+   ]
+  },
+  {
+   "k": "google_mobile_ads",
+   "android": [
+    "com.google.android.gms.ads.MobileAds"
+   ],
+   "maven": [
+    "com.google.android.gms:play-services-ads"
+   ]
+  },
+  {
+   "k": "google_ima",
+   "android": [
+    "com.google.ads.interactivemedia.v3.api.ImaSdkFactory"
+   ],
+   "maven": [
+    "com.google.ads.interactivemedia.v3:interactivemedia"
+   ]
+  },
+  {
+   "k": "google_maps",
+   "android": [
+    "com.google.android.gms.maps.MapsInitializer"
+   ],
+   "maven": [
+    "com.google.android.gms:play-services-maps"
+   ]
+  },
+  {
+   "k": "meta_sdk",
+   "android": [
+    "com.facebook.FacebookSdk",
+    "com.facebook.appevents.AppEventsLogger"
+   ],
+   "maven": [
+    "com.facebook.android:facebook-core"
+   ]
+  },
+  {
+   "k": "meta_audience_network",
+   "android": [
+    "com.facebook.ads.AudienceNetworkAds"
+   ],
+   "maven": [
+    "com.facebook.android:audience-network-sdk"
+   ]
+  },
+  {
+   "k": "tiktok_business",
+   "android": [
+    "com.tiktok.TikTokBusinessSdk"
+   ],
+   "maven": [
+    "com.github.tiktok:tiktok-business-android-sdk"
+   ]
+  },
+  {
+   "k": "snap_kit",
+   "android": [
+    "com.snap.corekit.SnapKit"
+   ],
+   "maven": [
+    "com.snap.corekit:corekit",
+    "com.snap.creativekit:creativekit",
+    "com.snap.loginkit:loginkit"
+   ]
+  },
+  {
+   "k": "appsflyer",
+   "android": [
+    "com.appsflyer.AppsFlyerLib"
+   ],
+   "maven": [
+    "com.appsflyer:af-android-sdk"
+   ]
+  },
+  {
+   "k": "adjust",
+   "android": [
+    "com.adjust.sdk.Adjust"
+   ],
+   "maven": [
+    "com.adjust.sdk:adjust-android"
+   ]
+  },
+  {
+   "k": "branch",
+   "android": [
+    "io.branch.referral.Branch"
+   ],
+   "maven": [
+    "io.branch.sdk.android:library"
+   ]
+  },
+  {
+   "k": "kochava",
+   "android": [
+    "com.kochava.tracker.Tracker"
+   ],
+   "maven": [
+    "com.kochava.tracker:tracker"
+   ]
+  },
+  {
+   "k": "singular",
+   "android": [
+    "com.singular.sdk.Singular"
+   ],
+   "maven": [
+    "com.singular.sdk:singular_sdk"
+   ]
+  },
+  {
+   "k": "tenjin",
+   "android": [
+    "com.tenjin.android.TenjinSDK"
+   ],
+   "maven": [
+    "com.tenjin:android-sdk"
+   ]
+  },
+  {
+   "k": "airbridge",
+   "android": [
+    "co.ab180.airbridge.Airbridge"
+   ],
+   "maven": [
+    "io.airbridge:sdk-android"
+   ]
+  },
+  {
+   "k": "applovin",
+   "android": [
+    "com.applovin.sdk.AppLovinSdk"
+   ],
+   "maven": [
+    "com.applovin:applovin-sdk"
+   ]
+  },
+  {
+   "k": "unity_ads",
+   "android": [
+    "com.unity3d.ads.UnityAds"
+   ],
+   "maven": [
+    "com.unity3d.ads:unity-ads"
+   ]
+  },
+  {
+   "k": "ironsource",
+   "android": [
+    "com.ironsource.mediationsdk.IronSource"
+   ],
+   "maven": [
+    "com.unity3d.ads-mediation:mediation-sdk"
+   ],
+   "legacyMaven": [
+    "com.ironsource.sdk:mediationsdk"
+   ]
+  },
+  {
+   "k": "liftoff_vungle",
+   "android": [
+    "com.vungle.ads.VungleAds",
+    "com.vungle.warren.Vungle"
+   ],
+   "maven": [
+    "com.vungle:vungle-ads"
+   ],
+   "legacy": [
+    "com.vungle.warren.Vungle"
+   ],
+   "legacyMaven": [
+    "com.vungle:publisher-sdk-android"
+   ]
+  },
+  {
+   "k": "inmobi",
+   "android": [
+    "com.inmobi.sdk.InMobiSdk"
+   ],
+   "maven": [
+    "com.inmobi.monetization:inmobi-ads-kotlin"
+   ],
+   "legacyMaven": [
+    "com.inmobi.monetization:inmobi-ads"
+   ]
+  },
+  {
+   "k": "chartboost",
+   "android": [
+    "com.chartboost.sdk.Chartboost"
+   ],
+   "maven": [
+    "com.chartboost:chartboost-sdk"
+   ]
+  },
+  {
+   "k": "mintegral",
+   "android": [
+    "com.mbridge.msdk.out.MBridgeSDKFactory"
+   ],
+   "maven": [
+    "com.mbridge.msdk.oversea:mbridge_android_sdk",
+    "com.mbridge.msdk.oversea:same"
+   ]
+  },
+  {
+   "k": "pangle",
+   "android": [
+    "com.bytedance.sdk.openadsdk.api.init.PAGSdk"
+   ],
+   "maven": [
+    "com.pangle.global:pag-sdk"
+   ],
+   "legacyMaven": [
+    "com.pangle.global:ads-sdk"
+   ]
+  },
+  {
+   "k": "amazon_publisher_services",
+   "android": [
+    "com.amazon.device.ads.AdRegistration"
+   ],
+   "maven": [
+    "com.amazon.android:aps-sdk"
+   ]
+  },
+  {
+   "k": "digital_turbine",
+   "android": [
+    "com.fyber.inneractive.sdk.external.InneractiveAdManager"
+   ],
+   "maven": [
+    "com.fyber:marketplace-sdk"
+   ]
+  },
+  {
+   "k": "criteo",
+   "android": [
+    "com.criteo.publisher.Criteo"
+   ],
+   "maven": [
+    "com.criteo.publisher:criteo-publisher-sdk"
+   ]
+  },
+  {
+   "k": "equativ",
+   "android": [
+    "com.smartadserver.android.library.util.SASConfiguration"
+   ],
+   "maven": [
+    "com.smartadserver.android:smart-display-sdk",
+    "com.smartadserver.android:smart-core-sdk"
+   ]
+  },
+  {
+   "k": "ogury",
+   "android": [
+    "com.ogury.sdk.Ogury"
+   ],
+   "maven": [
+    "co.ogury:ogury-sdk"
+   ]
+  },
+  {
+   "k": "teads",
+   "android": [
+    "tv.teads.sdk.TeadsSDK"
+   ],
+   "maven": [
+    "tv.teads.sdk.android:sdk"
+   ]
+  },
+  {
+   "k": "prebid",
+   "android": [
+    "org.prebid.mobile.PrebidMobile"
+   ],
+   "maven": [
+    "org.prebid:prebid-mobile-sdk"
+   ]
+  },
+  {
+   "k": "tapjoy",
+   "android": [
+    "com.tapjoy.Tapjoy"
+   ],
+   "maven": [
+    "com.tapjoy:tapjoy-android-sdk"
+   ]
+  },
+  {
+   "k": "amplitude",
+   "android": [
+    "com.amplitude.api.Amplitude",
+    "com.amplitude.android.Amplitude"
+   ],
+   "maven": [
+    "com.amplitude:analytics-android"
+   ],
+   "legacy": [
+    "com.amplitude.api.Amplitude"
+   ],
+   "legacyMaven": [
+    "com.amplitude:android-sdk"
+   ]
+  },
+  {
+   "k": "mixpanel",
+   "android": [
+    "com.mixpanel.android.mpmetrics.MixpanelAPI"
+   ],
+   "maven": [
+    "com.mixpanel.android:mixpanel-android"
+   ]
+  },
+  {
+   "k": "segment",
+   "android": [
+    "com.segment.analytics.Analytics",
+    "com.segment.analytics.kotlin.core.Analytics"
+   ],
+   "maven": [
+    "com.segment.analytics.kotlin:android"
+   ],
+   "legacy": [
+    "com.segment.analytics.Analytics"
+   ],
+   "legacyMaven": [
+    "com.segment.analytics.android:analytics"
+   ]
+  },
+  {
+   "k": "posthog",
+   "android": [
+    "com.posthog.PostHog"
+   ],
+   "maven": [
+    "com.posthog:posthog-android"
+   ]
+  },
+  {
+   "k": "heap",
+   "android": [
+    "io.heap.core.Heap",
+    "com.heapanalytics.android.Heap"
+   ],
+   "maven": [
+    "io.heap.core:heap-android-core"
+   ],
+   "legacyMaven": [
+    "com.heapanalytics.android:heap-android-client"
+   ],
+   "legacy": [
+    "com.heapanalytics.android.Heap"
+   ]
+  },
+  {
+   "k": "contentsquare",
+   "android": [
+    "com.contentsquare.android.Contentsquare"
+   ],
+   "maven": [
+    "com.contentsquare.android:library"
+   ]
+  },
+  {
+   "k": "microsoft_clarity",
+   "android": [
+    "com.microsoft.clarity.Clarity"
+   ],
+   "maven": [
+    "com.microsoft.clarity:clarity"
+   ]
+  },
+  {
+   "k": "appcenter_analytics",
+   "android": [
+    "com.microsoft.appcenter.analytics.Analytics"
+   ],
+   "maven": [
+    "com.microsoft.appcenter:appcenter-analytics"
+   ]
+  },
+  {
+   "k": "appcenter_crashes",
+   "android": [
+    "com.microsoft.appcenter.crashes.Crashes"
+   ],
+   "maven": [
+    "com.microsoft.appcenter:appcenter-crashes"
+   ]
+  },
+  {
+   "k": "flurry",
+   "android": [
+    "com.flurry.android.FlurryAgent"
+   ],
+   "maven": [
+    "com.flurry.android:analytics"
+   ]
+  },
+  {
+   "k": "countly",
+   "android": [
+    "ly.count.android.sdk.Countly"
+   ],
+   "maven": [
+    "ly.count.android:sdk"
+   ]
+  },
+  {
+   "k": "matomo",
+   "android": [
+    "org.matomo.sdk.Matomo"
+   ],
+   "maven": [
+    "com.github.matomo-org:matomo-sdk-android"
+   ]
+  },
+  {
+   "k": "adobe_experience",
+   "android": [
+    "com.adobe.marketing.mobile.MobileCore"
+   ],
+   "maven": [
+    "com.adobe.marketing.mobile:core"
+   ]
+  },
+  {
+   "k": "uxcam",
+   "android": [
+    "com.uxcam.UXCam"
+   ],
+   "maven": [
+    "com.uxcam:uxcam"
+   ]
+  },
+  {
+   "k": "smartlook",
+   "android": [
+    "com.smartlook.android.core.api.Smartlook"
+   ],
+   "maven": [
+    "com.smartlook.android:smartlook-analytics"
+   ]
+  },
+  {
+   "k": "fullstory",
+   "android": [
+    "com.fullstory.FS"
+   ],
+   "maven": [
+    "com.fullstory:instrumentation-full"
+   ]
+  },
+  {
+   "k": "logrocket",
+   "android": [
+    "com.logrocket.core.SDK"
+   ],
+   "maven": [
+    "com.logrocket:logrocket"
+   ]
+  },
+  {
+   "k": "sentry",
+   "android": [
+    "io.sentry.Sentry"
+   ],
+   "maven": [
+    "io.sentry:sentry-android"
+   ]
+  },
+  {
+   "k": "bugsnag",
+   "android": [
+    "com.bugsnag.android.Bugsnag"
+   ],
+   "maven": [
+    "com.bugsnag:bugsnag-android"
+   ]
+  },
+  {
+   "k": "instabug",
+   "android": [
+    "com.instabug.library.Instabug"
+   ],
+   "maven": [
+    "com.instabug.library:instabug"
+   ]
+  },
+  {
+   "k": "embrace",
+   "android": [
+    "io.embrace.android.embracesdk.Embrace"
+   ],
+   "maven": [
+    "io.embrace:embrace-android-sdk"
+   ]
+  },
+  {
+   "k": "new_relic",
+   "android": [
+    "com.newrelic.agent.android.NewRelic"
+   ],
+   "maven": [
+    "com.newrelic.agent.android:android-agent"
+   ]
+  },
+  {
+   "k": "datadog",
+   "android": [
+    "com.datadog.android.Datadog"
+   ],
+   "maven": [
+    "com.datadoghq:dd-sdk-android-core"
+   ]
+  },
+  {
+   "k": "braze",
+   "android": [
+    "com.braze.Braze",
+    "com.appboy.Appboy"
+   ],
+   "maven": [
+    "com.braze:android-sdk-base"
+   ],
+   "legacy": [
+    "com.appboy.Appboy"
+   ],
+   "legacyMaven": [
+    "com.appboy:android-sdk-base:16.0.0"
+   ]
+  },
+  {
+   "k": "onesignal",
+   "android": [
+    "com.onesignal.OneSignal"
+   ],
+   "maven": [
+    "com.onesignal:OneSignal"
+   ]
+  },
+  {
+   "k": "airship",
+   "android": [
+    "com.urbanairship.UAirship"
+   ],
+   "maven": [
+    "com.urbanairship.android:urbanairship-core"
+   ]
+  },
+  {
+   "k": "clevertap",
+   "android": [
+    "com.clevertap.android.sdk.CleverTapAPI"
+   ],
+   "maven": [
+    "com.clevertap.android:clevertap-android-sdk"
+   ]
+  },
+  {
+   "k": "iterable",
+   "android": [
+    "com.iterable.iterableapi.IterableApi"
+   ],
+   "maven": [
+    "com.iterable:iterableapi"
+   ]
+  },
+  {
+   "k": "moengage",
+   "android": [
+    "com.moengage.core.MoEngage"
+   ],
+   "maven": [
+    "com.moengage:moe-android-sdk"
+   ]
+  },
+  {
+   "k": "leanplum",
+   "android": [
+    "com.leanplum.Leanplum"
+   ],
+   "maven": [
+    "com.leanplum:leanplum-core"
+   ]
+  },
+  {
+   "k": "batch",
+   "android": [
+    "com.batch.android.Batch"
+   ],
+   "maven": [
+    "com.batch.android:batch-sdk"
+   ]
+  },
+  {
+   "k": "intercom",
+   "android": [
+    "io.intercom.android.sdk.Intercom"
+   ],
+   "maven": [
+    "io.intercom.android:intercom-sdk"
+   ]
+  }
+ ]
+}

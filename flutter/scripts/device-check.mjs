@@ -104,11 +104,13 @@ const logs = [];
 const run = (c, a, timeout = 180000) => execFileSync(c, a, { encoding: 'utf8', timeout }).trim();
 // A simulator that has just booted migrates its data first, and a loaded runner takes minutes to serve a first launch.
 const SIMULATOR_MS = 420000;
+// The API 24 emulator (no hardware GPU, a loaded runner) can take more than 3 minutes to install a debug build.
+const INSTALL_MS = 420000;
 if (platform === 'android') {
   try {
-    run('adb', ['uninstall', pkg]);
+    run('adb', ['uninstall', pkg], INSTALL_MS);
   } catch {}
-  run('adb', ['install', '-r', app]);
+  run('adb', ['install', '-r', app], INSTALL_MS);
   run('adb', ['shell', 'logcat', '-c']);
 } else {
   run('xcrun', ['simctl', 'bootstatus', udid, '-b'], SIMULATOR_MS);
@@ -165,7 +167,7 @@ const events = batches.flatMap((b) => b.e ?? []);
 const views = batches.flatMap((b) => b.x ?? []);
 const reports = batches.flatMap((b) => b.cr ?? []);
 const raw = JSON.stringify(batches);
-expect(batches.length > 0 && batches.every((b) => b.sdk === 'flutter/1.1.0'), 'batches name the SDK flutter/1.1.0');
+expect(batches.length > 0 && batches.every((b) => b.sdk === 'flutter/1.2.0'), 'batches name the SDK flutter/1.2.0');
 const screens = events.filter((e) => e.k === 'screen').map((e) => e.n);
 console.log('     screens:', screens.join(', '));
 expect(['Home', '/product/:id', 'Checkout', 'Measure'].every((n) => screens.includes(n)), 'the screens have their route names');

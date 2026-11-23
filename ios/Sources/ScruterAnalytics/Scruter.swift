@@ -180,7 +180,7 @@ extension Scruter {
     @_spi(ScruterBridge)
     public static func _setBridge(sdk: String, version: String) {
         guard ["react_native", "flutter"].contains(sdk) else { return }
-        Runtime.shared.bridge = (sdk, Text.cut(version, max: 30))
+        Runtime.shared.bridge = (sdk, AnalyticsText.cut(version, max: 30))
     }
 
     /// For a cross-platform SDK whose toolkit draws its own widgets (Flutter): the native SDK sees one surface, so it
@@ -201,7 +201,7 @@ extension Scruter {
     @_spi(ScruterBridge)
     public static func _analysedScreen(session: String, json: Data) {
         Runtime.shared.run { e in
-            if let body = JSON.parse(json) { e.wrapperAnalysed(session: session, body: body) }
+            if let body = JSONValue.parse(json) { e.wrapperAnalysed(session: session, body: body) }
         }
     }
 
@@ -209,7 +209,7 @@ extension Scruter {
     @_spi(ScruterBridge)
     public static func _teamImage(screen: String, jpeg: Data, tree: Data, width: Int, height: Int, scale: Double) {
         Runtime.shared.run { e in
-            guard e.team.isActive, let t = JSON.parse(tree) else { return }
+            guard e.team.isActive, let t = JSONValue.parse(tree) else { return }
             let meta = Team.meta(
                 screen: screen, device: e.env.device, width: width, height: height, scale: scale, takenAt: Date())
             e.team.upload(screen: screen, meta: meta, jpeg: jpeg, tree: t)
@@ -247,12 +247,12 @@ extension Scruter {
         images: [[String: String]] = []
     ) {
         guard ["crash", "nonfatal"].contains(kind), ["js", "dart"].contains(src) else { return }
-        let converted: [JSON] = frames.prefix(CrashReport.maxFrames).map { f in
+        let converted: [JSONValue] = frames.prefix(CrashReport.maxFrames).map { f in
             var o = Fields()
             for (k, v) in f {
                 switch (k, v) {
                 case ("fn", let s as String), ("cl", let s as String), ("fl", let s as String):
-                    o[k] = .string(Text.cut(s, max: 200))
+                    o[k] = .string(AnalyticsText.cut(s, max: 200))
                 case ("a", let s as String):
                     o[k] = .string(s)
                 case ("l", let n as Int), ("co", let n as Int), ("ia", let n as Int), ("i", let n as Int):
@@ -262,9 +262,9 @@ extension Scruter {
             }
             return .object(o)
         }
-        let convertedImages: [JSON] = images.prefix(100).map { m in
+        let convertedImages: [JSONValue] = images.prefix(100).map { m in
             var o = Fields()
-            for (k, v) in m where ["n", "u", "la", "ar"].contains(k) { o[k] = .string(Text.cut(v, max: 200)) }
+            for (k, v) in m where ["n", "u", "la", "ar"].contains(k) { o[k] = .string(AnalyticsText.cut(v, max: 200)) }
             return .object(o)
         }
         Runtime.shared.run {
@@ -320,7 +320,7 @@ final class Runtime {
     var logSink: ((String) -> Void)?
 
     /// Test hook: builds the environment instead of the platform's.
-    var makeEnvironment: ((StartOptions) -> Environment)?
+    var makeEnvironment: ((StartOptions) -> AnalyticsEnvironment)?
 
     func start(_ options: StartOptions) {
         lock.lock()
@@ -341,7 +341,7 @@ final class Runtime {
         let mainFacts = ApplePlatform.mainThreadFacts()
         #endif
         queue.async { [self] in
-            let env: Environment
+            let env: AnalyticsEnvironment
             if let make = makeEnvironment {
                 env = make(options)
             } else {
@@ -352,7 +352,7 @@ final class Runtime {
                 #else
                 let store = FileStore(
                     directory: FileManager.default.temporaryDirectory.appendingPathComponent("scruter-\(options.appId)"))
-                env = Environment(
+                env = AnalyticsEnvironment(
                     scheduler: QueueScheduler(queue: queue), http: URLSessionHTTPClient(queue: queue), store: store,
                     secrets: FileSecretStore(store: store), device: DeviceInfo())
                 #endif

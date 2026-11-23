@@ -29,10 +29,10 @@ final class FakeServer: HTTPClient {
     }
 
     /// Every event and analysed screen view sent so far.
-    func items(_ key: String) -> [JSON] {
-        requests.filter { $0.url.path.hasSuffix("/m/v1/batch") }.compactMap { r -> JSON? in
+    func items(_ key: String) -> [JSONValue] {
+        requests.filter { $0.url.path.hasSuffix("/m/v1/batch") }.compactMap { r -> JSONValue? in
             // The test environment's gzip is the identity: bodies are plain JSON.
-            r.body.flatMap { JSON.parse($0) }
+            r.body.flatMap { JSONValue.parse($0) }
         }.flatMap { $0[key]?.arrayValue ?? [] }
     }
 }
@@ -57,7 +57,7 @@ final class PlatformTests: XCTestCase {
         Runtime.shared.makeEnvironment = { _ in
             let store = FileStore(directory: directory)
             let device = Device.info(form: "phone", testBuild: false)
-            return Environment(
+            return AnalyticsEnvironment(
                 scheduler: QueueScheduler(queue: Runtime.shared.queue), http: server, store: store,
                 secrets: FileSecretStore(store: store), device: device, gzip: { $0 })
         }

@@ -64,6 +64,10 @@ function check(root, schema, v, path, errors) {
     const keys = Object.keys(v);
     for (const r of schema.required || []) if (!(r in v)) errors.push(`${path}: missing ${r}`);
     if (schema.maxProperties !== undefined && keys.length > schema.maxProperties) errors.push(`${path}: more than ${schema.maxProperties} properties`);
+    if (schema.minProperties !== undefined && keys.length < schema.minProperties) errors.push(`${path}: fewer than ${schema.minProperties} properties`);
+    for (const [k, needs] of Object.entries(schema.dependentRequired || {})) {
+      if (k in v) for (const r of needs) if (!(r in v)) errors.push(`${path}: ${k} requires ${r}`);
+    }
     for (const k of keys) {
       if (schema.propertyNames) check(root, schema.propertyNames, k, `${path}.<${k}>`, errors);
       if (schema.properties && k in schema.properties) check(root, schema.properties[k], v[k], `${path}.${k}`, errors);
@@ -97,7 +101,7 @@ export function validate(name, value, defName) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [name, file, def] = process.argv.slice(2);
   if (!name || !file) {
-    console.error('usage: node validate.mjs <batch|config|team-register|team-screen|symbols> <file.json> [$defs name]');
+    console.error('usage: node validate.mjs <batch|config|team-register|team-screen|symbols|cmp-config|cmp-hit|cmp-consent|cmp-sdks|cmp-sdk-catalogue> <file.json> [$defs name]');
     process.exit(2);
   }
   const errors = validate(name, JSON.parse(readFileSync(file, 'utf8')), def);

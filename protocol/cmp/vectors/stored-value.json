@@ -1,0 +1,183 @@
+{
+  "description": "The stored choice, format 1 (docs/CMP.md §4.3, docs/CMP-MOBILE.md M5): the value of the cookie scruter_consent on the web, of the key `choice` of the app's own storage in the SDKs. `parse(value)` gives `stored` (at = Unix seconds, base 36 in the value; pending = the proof not acknowledged yet), `serialize(stored)` gives `value` back; every `invalid` value parses as no choice. Checked against the web core by cmp/test/conformance.test.ts.",
+  "valid": [
+    {
+      "note": "docs/CMP.md §4.3 example",
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.3.412.analytics+embedded_content.",
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 63342141346,
+        "rev": 3,
+        "banner": 412,
+        "granted": [
+          "analytics",
+          "embedded_content"
+        ],
+        "pending": null
+      }
+    },
+    {
+      "note": "everything refused: an empty list",
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.3.412..",
+      "stored": {
+        "id": "cns_8f2a41c9e7b3d0a1f2c4",
+        "at": 63342141346,
+        "rev": 3,
+        "banner": 412,
+        "granted": [],
+        "pending": null
+      }
+    },
+    {
+      "note": "proof not acknowledged yet: custom from the preferences",
+      "value": "1.cns_0123456789abcdef0123.tlpwu8.12.98765.analytics+advertising+embedded_content.pcp",
+      "stored": {
+        "id": "cns_0123456789abcdef0123",
+        "at": 1790000000,
+        "rev": 12,
+        "banner": 98765,
+        "granted": [
+          "analytics",
+          "advertising",
+          "embedded_content"
+        ],
+        "pending": {
+          "action": "custom",
+          "source": "preferences"
+        }
+      }
+    },
+    {
+      "note": "pending accept_all from banner",
+      "value": "1.cns_00112233445566778899.tlpwu8.1.412.analytics.pab",
+      "stored": {
+        "id": "cns_00112233445566778899",
+        "at": 1790000000,
+        "rev": 1,
+        "banner": 412,
+        "granted": [
+          "analytics"
+        ],
+        "pending": {
+          "action": "accept_all",
+          "source": "banner"
+        }
+      }
+    },
+    {
+      "note": "pending reject_all from banner",
+      "value": "1.cns_00112233445566778899.tlpwu8.1.412..prb",
+      "stored": {
+        "id": "cns_00112233445566778899",
+        "at": 1790000000,
+        "rev": 1,
+        "banner": 412,
+        "granted": [],
+        "pending": {
+          "action": "reject_all",
+          "source": "banner"
+        }
+      }
+    },
+    {
+      "note": "pending close from banner",
+      "value": "1.cns_00112233445566778899.tlpwu8.1.412..pxb",
+      "stored": {
+        "id": "cns_00112233445566778899",
+        "at": 1790000000,
+        "rev": 1,
+        "banner": 412,
+        "granted": [],
+        "pending": {
+          "action": "close",
+          "source": "banner"
+        }
+      }
+    },
+    {
+      "note": "pending withdraw from preferences",
+      "value": "1.cns_00112233445566778899.tlpwu8.1.412..pwp",
+      "stored": {
+        "id": "cns_00112233445566778899",
+        "at": 1790000000,
+        "rev": 1,
+        "banner": 412,
+        "granted": [],
+        "pending": {
+          "action": "withdraw",
+          "source": "preferences"
+        }
+      }
+    },
+    {
+      "note": "pending reject_all from api",
+      "value": "1.cns_00112233445566778899.tlpwu8.1.412..pri",
+      "stored": {
+        "id": "cns_00112233445566778899",
+        "at": 1790000000,
+        "rev": 1,
+        "banner": 412,
+        "granted": [],
+        "pending": {
+          "action": "reject_all",
+          "source": "api"
+        }
+      }
+    },
+    {
+      "note": "pending custom from floating_button (an app never sends floating_button)",
+      "value": "1.cns_00112233445566778899.tlpwu8.1.412.analytics.pcf",
+      "stored": {
+        "id": "cns_00112233445566778899",
+        "at": 1790000000,
+        "rev": 1,
+        "banner": 412,
+        "granted": [
+          "analytics"
+        ],
+        "pending": {
+          "action": "custom",
+          "source": "floating_button"
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "value": "",
+      "note": "empty"
+    },
+    {
+      "value": "2.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.3.412..",
+      "note": "format 2 is unknown"
+    },
+    {
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c.t3k9x2a.3.412..",
+      "note": "consent id too short"
+    },
+    {
+      "value": "1.cns_8F2A41C9E7B3D0A1F2C4.t3k9x2a.3.412..",
+      "note": "consent id in upper case"
+    },
+    {
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.3.412.Analytics.",
+      "note": "a key in upper case"
+    },
+    {
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.x.412..",
+      "note": "consent_rev not a number"
+    },
+    {
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.3.412..pzz",
+      "note": "unknown flag letters"
+    },
+    {
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.3.412.",
+      "note": "six fields"
+    },
+    {
+      "value": "1.cns_8f2a41c9e7b3d0a1f2c4.t3k9x2a.3.412.a+b..",
+      "note": "eight fields (one-letter keys are invalid too)"
+    }
+  ]
+}

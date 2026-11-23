@@ -36,15 +36,22 @@ from pathlib import Path
 NAMESPACE = "net.scruter"
 SIGNING_FINGERPRINT = "3BDEE583E8C3BD91800986FBC2F008320316D8D7"
 
-# Everything Maven Central receives, in one deployment: both or neither (`packaging` of each POM).
+# Everything Maven Central receives, in one deployment: all or none (`packaging` of each POM).
 ARTIFACTS = {
     ("net.scruter", "scruter-android"): "aar",
+    ("net.scruter", "scruter-cmp"): "aar",
+    ("net.scruter", "scruter-cmp-compose"): "aar",
     ("net.scruter", "scruter-symbols-gradle-plugin"): "jar",
     # The plugin marker: `id("net.scruter.symbols")` also resolves from mavenCentral().
     ("net.scruter.symbols", "net.scruter.symbols.gradle.plugin"): "pom",
 }
 # The artifacts the Central Portal is asked about: the marker cannot exist without the plugin.
-CENTRAL_PUBLISHED = [("net.scruter", "scruter-android"), ("net.scruter", "scruter-symbols-gradle-plugin")]
+CENTRAL_PUBLISHED = [
+    ("net.scruter", "scruter-android"),
+    ("net.scruter", "scruter-cmp"),
+    ("net.scruter", "scruter-cmp-compose"),
+    ("net.scruter", "scruter-symbols-gradle-plugin"),
+]
 
 NPM_PACKAGE = "@scruter/react-native"
 PUB_PACKAGE = "scruter_flutter"
@@ -117,7 +124,7 @@ def published_central(version: str) -> bool:
             raise Unknown(f"the Central Portal answered {status} about {name}")
         found.append(bool(json.loads(body).get("published")))
     if any(found) and not all(found):
-        # One deployment holds both: half of it published means someone uploaded by hand.
+        # One deployment holds them all: part of it published means someone uploaded by hand.
         raise Unknown(f"only part of {version} is on Maven Central: {dict(zip(CENTRAL_PUBLISHED, found))}")
     return all(found)
 

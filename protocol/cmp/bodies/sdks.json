@@ -1,0 +1,11 @@
+{
+  "a": "ATMONA02",
+  "p": "android",
+  "av": "2.3.0",
+  "c": 1,
+  "k": [
+    "appsflyer",
+    "firebase_analytics",
+    "google_mobile_ads"
+  ]
+}

@@ -59,7 +59,7 @@ enum MacFacts {
 
     /// The Mac's model identifier (`Mac14,2`), also inside a Catalyst or iOS app on the Mac.
     static func model() -> String {
-        Text.cut(sysctl("hw.model") ?? "", max: 60)
+        AnalyticsText.cut(sysctl("hw.model") ?? "", max: 60)
     }
     #endif
 }

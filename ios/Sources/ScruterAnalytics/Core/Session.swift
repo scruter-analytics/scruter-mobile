@@ -13,7 +13,7 @@ struct SessionState: Equatable {
     var anr = 0
     var last: Int64 = 0
 
-    var json: JSON {
+    var json: JSONValue {
         .object([
             "sv": .int(Int64(min(sv, 100_000))), "ev": .int(Int64(min(ev, 100_000))),
             "dur": .int(Int64(max(0, min(dur, 86_400)))), "en": .string(en), "ex": .string(ex),
@@ -24,7 +24,7 @@ struct SessionState: Equatable {
 
     init() {}
 
-    init?(json: JSON) {
+    init?(json: JSONValue) {
         guard let sv = json.int("sv"), let ev = json.int("ev"), let dur = json.int("dur"),
             let last = json.int64("last")
         else { return nil }
@@ -47,7 +47,7 @@ struct Opening {
     var url = ""
     var referrer = ""
 
-    var json: JSON {
+    var json: JSONValue {
         var o: Fields = ["k": .string(kind)]
         if !url.isEmpty { o["u"] = .string(url) }
         if !referrer.isEmpty { o["r"] = .string(referrer) }
@@ -60,7 +60,7 @@ struct Opening {
         self.referrer = referrer
     }
 
-    init(json: JSON?) {
+    init(json: JSONValue?) {
         kind = json?.str("k") ?? "icon"
         url = json?.str("u") ?? ""
         referrer = json?.str("r") ?? ""
@@ -78,7 +78,7 @@ final class Session {
     var dims: Fields
     var opening: Opening
     /// The install source (`ins`), sent once.
-    var installSource: JSON?
+    var installSource: JSONValue?
     var current = SessionState()
     var acked: SessionState?
     var ackedQ = 0
@@ -131,7 +131,7 @@ final class Session {
     }
 
     /// The batch's session object for state number `q`.
-    func wire(q: Int, state: SessionState) -> JSON {
+    func wire(q: Int, state: SessionState) -> JSONValue {
         var o = dims
         o["id"] = .string(id)
         o["d"] = .string(daily)
@@ -146,7 +146,7 @@ final class Session {
         return .object(o)
     }
 
-    var persisted: JSON {
+    var persisted: JSONValue {
         var o: Fields = [
             "id": .string(id), "d": .string(daily), "st": .int(start), "n": .bool(firstAfterInstall),
             "dims": .object(dims), "o": opening.json, "c": current.json, "q": .int(Int64(ackedQ)),
@@ -160,7 +160,7 @@ final class Session {
         return .object(o)
     }
 
-    static func restore(_ j: JSON) -> Session? {
+    static func restore(_ j: JSONValue) -> Session? {
         guard let id = j.str("id"), let d = j.str("d"), let st = j.int64("st"),
             let c = j["c"].flatMap(SessionState.init(json:))
         else { return nil }
@@ -187,7 +187,7 @@ struct Breadcrumb {
     var name: String
     var time: Int64
 
-    var json: JSON { ["k": .string(kind), "n": .string(name), "t": .int(time)] }
+    var json: JSONValue { ["k": .string(kind), "n": .string(name), "t": .int(time)] }
 
     init(kind: String, name: String, time: Int64) {
         self.kind = kind
@@ -195,10 +195,10 @@ struct Breadcrumb {
         self.time = time
     }
 
-    init?(json: JSON) {
+    init?(json: JSONValue) {
         guard let k = json.str("k"), let n = json.str("n"), !n.isEmpty else { return nil }
         kind = k == "event" ? "event" : "screen"
-        name = Text.cut(n, max: 120)
+        name = AnalyticsText.cut(n, max: 120)
         time = json.int64("t") ?? 0
     }
 }

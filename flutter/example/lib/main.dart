@@ -3,13 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scruter_flutter/scruter_flutter.dart';
 
+import 'privacy.dart';
 import 'self_check.dart';
 
 /// Set for the self-check (scripts/device-check.mjs); a real app leaves them out.
 const _endpoint = String.fromEnvironment('SCRUTER_ENDPOINT');
 const _selfCheck = bool.fromEnvironment('SCRUTER_SELF_CHECK');
 
+/// Scruter CMP: the local stub of the ingest for scripts/cmp-device-check.mjs; a real app leaves it out.
+const _cmpEndpoint = String.fromEnvironment('SCRUTER_CMP_ENDPOINT');
+
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Scruter CMP first: the app's optional SDKs wait for its answer (CMP.md). The analytics self-check runs without it.
+  if (!_selfCheck) {
+    ScruterCMP.debug = true;
+    // Your app's code in Scruter CMP.
+    await ScruterCMP.start(appId: 'EXMPL02', endpoint: _cmpEndpoint.isEmpty ? null : _cmpEndpoint);
+    Partners.shared.wire();
+  }
   final started = Stopwatch()..start();
   await Scruter.start(
     appId: 'ATMONA02',
@@ -36,6 +48,7 @@ final router = GoRouter(
       builder: (_, __) => const HomeScreen(),
       routes: [
         GoRoute(path: 'settings', name: 'Settings', builder: (_, __) => const SettingsScreen()),
+        GoRoute(path: 'privacy', name: 'Privacy', builder: (_, __) => const PrivacyScreen()),
       ],
     ),
     GoRoute(
@@ -66,6 +79,11 @@ class HomeScreen extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Atelier Mona'),
           actions: [
+            TextButton(
+              key: const ValueKey('privacy'),
+              onPressed: () => context.go('/privacy'),
+              child: const Text('Privacy'),
+            ),
             IconButton(
               key: const ValueKey('settings'),
               tooltip: 'Settings',

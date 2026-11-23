@@ -1,3 +1,9 @@
+## 1.2.0
+
+Scruter CMP: `ScruterCMP`, the native consent sheet of Scruter CMP over the iOS and Android modules, for an app that
+takes it (`scruter: { cmp: true }` in its `pubspec.yaml`; `analytics: false` leaves Scruter Analytics out). Guide:
+`CMP.md`. Without that key, nothing changes.
+
 ## 1.1.0
 
 An iPhone or iPad app running on a Mac (« Designed for iPad » on Apple silicon) sends the platform `macos`, the form

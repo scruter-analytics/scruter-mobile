@@ -8,11 +8,11 @@ struct QueueItem {
     var kind: Kind
     var session: String
     var time: Int64
-    var body: JSON
+    var body: JSONValue
     /// Bytes of `body`'s JSON, for the batch and queue limits.
     var bytes: Int
 
-    init(id: Int64, kind: Kind, session: String, time: Int64, body: JSON) {
+    init(id: Int64, kind: Kind, session: String, time: Int64, body: JSONValue) {
         self.id = id
         self.kind = kind
         self.session = session
@@ -21,11 +21,11 @@ struct QueueItem {
         bytes = body.encoded().count
     }
 
-    var line: JSON {
+    var line: JSONValue {
         ["i": .int(id), "k": .string(kind.rawValue), "s": .string(session), "t": .int(time), "b": body]
     }
 
-    init?(line: JSON) {
+    init?(line: JSONValue) {
         guard let id = line.int64("i"), let k = line.str("k").flatMap(Kind.init(rawValue:)),
             let s = line.str("s"), let t = line.int64("t"), let b = line["b"]
         else { return nil }
@@ -63,7 +63,7 @@ final class PersistentQueue {
         for raw in data.split(separator: 0x0A) where raw.count > 1 {
             let tag = raw[raw.startIndex]
             let rest = raw.dropFirst()
-            if tag == UInt8(ascii: "+"), let j = JSON.parse(Data(rest)), let item = QueueItem(line: j) {
+            if tag == UInt8(ascii: "+"), let j = JSONValue.parse(Data(rest)), let item = QueueItem(line: j) {
                 // A newer state of an item replaces it in place (ids only grow: only an old id needs the search).
                 if item.id <= highest, let i = live.lastIndex(where: { $0.id == item.id }) {
                     live[i] = item
@@ -91,7 +91,7 @@ final class PersistentQueue {
     var oldestTime: Int64? { items.first?.time }
 
     @discardableResult
-    func append(kind: QueueItem.Kind, session: String, time: Int64, body: JSON) -> QueueItem {
+    func append(kind: QueueItem.Kind, session: String, time: Int64, body: JSONValue) -> QueueItem {
         let item = QueueItem(id: nextId, kind: kind, session: session, time: time, body: body)
         nextId += 1
         if kind == .crash {
@@ -108,7 +108,7 @@ final class PersistentQueue {
     }
 
     /// Replaces an unsent item's body in place (an analysed screen view's newer state).
-    func replace(id: Int64, body: JSON, time: Int64) {
+    func replace(id: Int64, body: JSONValue, time: Int64) {
         guard let i = items.firstIndex(where: { $0.id == id }) else { return }
         totalBytes -= items[i].bytes
         let item = QueueItem(id: id, kind: items[i].kind, session: items[i].session, time: time, body: body)

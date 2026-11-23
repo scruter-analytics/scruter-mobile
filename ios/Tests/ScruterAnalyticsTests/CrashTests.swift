@@ -80,7 +80,7 @@ final class CrashTests: XCTestCase {
         h.advance(seconds: 10)
         let e2 = h.boot()
         e2.crashReported(raw: CrashReport.parseRaw(Data(Self.rawReport(session: sid, time: crashTime).utf8))!)
-        let tree = try XCTUnwrap(JSON.parse(Self.metricKitTree))
+        let tree = try XCTUnwrap(JSONValue.parse(Self.metricKitTree))
         let d = CrashReport.Diagnostic(
             kind: "crash", time: crashTime + 1000, callStackTree: tree, exceptionType: 1, exceptionCode: 0, signal: 11,
             reason: nil)
@@ -99,7 +99,7 @@ final class CrashTests: XCTestCase {
         h.advance(seconds: 60)
         let e2 = h.boot()
         e2.enterForeground()
-        let tree = try XCTUnwrap(JSON.parse(Self.metricKitTree))
+        let tree = try XCTUnwrap(JSONValue.parse(Self.metricKitTree))
         e2.diagnostic(
             CrashReport.Diagnostic(
                 kind: "crash", time: crashTime, callStackTree: tree, exceptionType: 1, exceptionCode: 0, signal: 11,

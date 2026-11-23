@@ -1,0 +1,146 @@
+{
+  "v": 1,
+  "on": 1,
+  "ttl": 3600,
+  "config": {
+    "ab_test": null,
+    "banner": {
+      "id": 412,
+      "version": 3
+    },
+    "config_rev": 42,
+    "consent_rev": 3,
+    "cookie": {
+      "renew_months": 6
+    },
+    "endpoint": "https://cdn.scruter.net",
+    "format": 1,
+    "gcm": {
+      "mode": "advanced",
+      "map": {
+        "ad_personalization": "advertising",
+        "ad_storage": "advertising",
+        "ad_user_data": "advertising",
+        "analytics_storage": "analytics"
+      },
+      "ads_data_redaction": true,
+      "url_passthrough": false
+    },
+    "purposes": [
+      {
+        "key": "necessary",
+        "required": true,
+        "rev": 1
+      },
+      {
+        "key": "analytics",
+        "required": false,
+        "rev": 3
+      },
+      {
+        "key": "advertising",
+        "required": false,
+        "rev": 1
+      }
+    ],
+    "site": "ATMONA02",
+    "tcf": null,
+    "ui": {
+      "aliases": {},
+      "branding": true,
+      "buttons": "three",
+      "close_link": true,
+      "color": "#1F6F5C",
+      "default_language": "fr",
+      "delay_s": 0,
+      "edge": false,
+      "languages": [
+        "fr",
+        "en",
+        "de"
+      ],
+      "logo_mode": "auto",
+      "logo_url": "https://cdn.scruter.net/cmp/assets/logos/a56107fd16ab8fec0de79326b90165570bb6a491350078151f88893bea1321d3.png",
+      "on_color": "#FFFFFF",
+      "position": "right",
+      "providers": {
+        "advertising": [
+          "Google Mobile Ads",
+          "Meta"
+        ],
+        "analytics": [
+          "Firebase Analytics"
+        ]
+      },
+      "radius": 16,
+      "rtl": [],
+      "style": "scruter_v2",
+      "template": "card",
+      "text_hashes": {
+        "fr": "60e37e780048000a8255e6353a442ecde77e949aa68b6e19205e21945c4958a1"
+      },
+      "texts": {
+        "fr": {
+          "accept_all": "Tout accepter",
+          "close": "Continuer sans accepter",
+          "customize": "Personnaliser",
+          "floating_button": "Gérer mes cookies",
+          "message": "Atelier Mona et ses partenaires utilisent des traceurs pour mesurer l’audience de l’app et personnaliser les publicités.",
+          "policy_url": null,
+          "preferences_intro": "Choisissez.",
+          "preferences_title": "Vos préférences",
+          "purposes": {
+            "advertising": {
+              "description": "Afficher des publicités adaptées à vos centres d’intérêt.",
+              "name": "Publicité"
+            },
+            "analytics": {
+              "description": "Comprendre comment l’app est utilisée.",
+              "name": "Mesure d’audience"
+            },
+            "necessary": {
+              "description": "Faire fonctionner l’app et garder votre choix.",
+              "name": "Nécessaires"
+            }
+          },
+          "reject_all": "Tout refuser",
+          "save": "Enregistrer",
+          "title": "Vos données, vos choix"
+        }
+      },
+      "theme": "auto",
+      "hero": {
+        "type": "image",
+        "w": 1600,
+        "h": 900,
+        "poster": [
+          {
+            "url": "https://cdn.scruter.net/cmp/media/ae6c79d10f1fd410650790e63186ec108fa106325b52fbd88de21a43540e6f2c.avif",
+            "type": "image/avif",
+            "w": 960
+          },
+          {
+            "url": "https://cdn.scruter.net/cmp/media/ae6c79d10f1fd410650790e63186ec108fa106325b52fbd88de21a43540e6f20.jpg",
+            "type": "image/jpeg",
+            "w": 960
+          }
+        ],
+        "focal": [
+          50,
+          40
+        ],
+        "phone": "crop",
+        "edge": "curve"
+      }
+    }
+  },
+  "app": {
+    "policy_url": "https://atelier-mona.fr/confidentialite",
+    "icon": "https://cdn.scruter.net/cmp/assets/logos/a56107fd16ab8fec0de79326b90165570bb6a491350078151f88893bea1321d3.png",
+    "ids": [
+      "fr.ateliermona.app",
+      "fr.ateliermona.app.dev"
+    ],
+    "sdk_catalogue": 1
+  }
+}

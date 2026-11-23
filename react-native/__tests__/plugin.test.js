@@ -1,4 +1,7 @@
-const { raised, setAppGradle, setBundlePhase, setInfoPlist } = require('../plugin');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { modulesOf, raised, setAppGradle, setBundlePhase, setInfoPlist, setTrackingDescription } = require('../plugin');
 const plugin = require('../app.plugin.js');
 
 const GRADLE = `android {
@@ -80,5 +83,45 @@ describe('the plugin', () => {
     const c = plugin({ name: 'a', slug: 'a' }, { appId: 'ATMONA02' });
     expect(Object.keys(c.mods.ios).sort()).toEqual(['infoPlist', 'podfileProperties', 'xcodeproj']);
     expect(Object.keys(c.mods.android).sort()).toEqual(['appBuildGradle', 'gradleProperties']);
+  });
+});
+
+/** An Expo project whose package.json has this "scruter" key. */
+function project(scruter) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scruter-plugin-'));
+  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'app', ...(scruter ? { scruter } : {}) }));
+  return { name: 'a', slug: 'a', _internal: { projectRoot: dir } };
+}
+
+describe('Scruter CMP in the plugin', () => {
+  it('reads the modules as the podspec and Gradle do', () => {
+    expect(modulesOf(project()._internal.projectRoot)).toEqual({ analytics: true, cmp: false });
+    expect(modulesOf(project({ cmp: true })._internal.projectRoot)).toEqual({ analytics: true, cmp: true });
+    expect(modulesOf(project({ cmp: true, analytics: false })._internal.projectRoot)).toEqual({ analytics: false, cmp: true });
+    expect(modulesOf('/nowhere')).toEqual({ analytics: true, cmp: false });
+  });
+
+  it('needs nothing for the CMP alone: no app id, no Analytics change', () => {
+    const c = plugin(project({ cmp: true, analytics: false }), {});
+    expect(Object.keys(c.mods.ios).sort()).toEqual(['podfileProperties']);
+    expect(Object.keys(c.mods.android).sort()).toEqual(['gradleProperties']);
+  });
+
+  it('sets the tracking prompt\'s text when the app asks it', () => {
+    const c = plugin(project({ cmp: true, analytics: false }), { trackingDescription: 'To show you ads about our bowls.' });
+    expect(Object.keys(c.mods.ios).sort()).toEqual(['infoPlist', 'podfileProperties']);
+    expect(setTrackingDescription({}, 'To show you ads.')).toEqual({ NSUserTrackingUsageDescription: 'To show you ads.' });
+    expect(setTrackingDescription({ NSUserTrackingUsageDescription: 'Kept' }, undefined)).toEqual({ NSUserTrackingUsageDescription: 'Kept' });
+  });
+
+  it('keeps the Analytics changes for an app with both', () => {
+    const c = plugin(project({ cmp: true }), { appId: 'ATMONA02', trackingDescription: 'Ads.' });
+    expect(Object.keys(c.mods.ios).sort()).toEqual(['infoPlist', 'podfileProperties', 'xcodeproj']);
+    expect(() => plugin(project({ cmp: true }), {})).toThrow('appId');
+  });
+
+  it('refuses a tracking text without the CMP, or an empty one', () => {
+    expect(() => plugin(project(), { appId: 'ATMONA02', trackingDescription: 'Ads.' })).toThrow('cmp');
+    expect(() => plugin(project({ cmp: true }), { appId: 'ATMONA02', trackingDescription: ' ' })).toThrow('sentence');
   });
 });

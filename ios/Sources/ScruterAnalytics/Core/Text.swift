@@ -1,7 +1,7 @@
 import Foundation
 
 /// String rules shared by names, properties, selectors and keys (docs/MOBILE.md §3.3–§3.5).
-enum Text {
+enum AnalyticsText {
     /// The UTF-8 bytes of a string (one generic specialisation for the whole SDK).
     static func utf8(_ s: String) -> Data { Data(Array(s.utf8)) }
 

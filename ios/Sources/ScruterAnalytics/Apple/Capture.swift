@@ -78,7 +78,7 @@ final class ScreenCapture {
         var width: Int
         var height: Int
         var scale: Double
-        var tree: JSON
+        var tree: JSONValue
     }
 
     /// Captures the current screen (main thread).
@@ -287,15 +287,15 @@ struct TreeCollector {
         while let s = stack.popLast(), visited < 50 {
             visited += 1
             if Elements.isMasked(s) { continue }
-            if let l = s as? UILabel, let t = l.text, !t.isEmpty { return Text.clean(t, max: 80) }
+            if let l = s as? UILabel, let t = l.text, !t.isEmpty { return AnalyticsText.clean(t, max: 80) }
             stack.append(contentsOf: s.subviews)
         }
         return nil
     }
 
     /// The tree in the image's pixels.
-    func tree(scale: CGFloat) -> JSON {
-        let list: [JSON] = order.compactMap { key in
+    func tree(scale: CGFloat) -> JSONValue {
+        let list: [JSONValue] = order.compactMap { key in
             guard case .object(var n)? = nodes[key] else { return nil }
             for k in ["x", "y", "w", "h"] {
                 let v = n[k]?.doubleValue ?? 0

@@ -291,7 +291,7 @@ enum Elements {
             text = t.text
         }
         guard let t = text?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return nil }
-        return Text.clean(t, max: 80)
+        return AnalyticsText.clean(t, max: 80)
     }
 }
 #endif
