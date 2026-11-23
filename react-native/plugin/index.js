@@ -1,13 +1,9 @@
 'use strict';
-// The Expo config plugin: an Expo app needs no native edit (docs/MOBILE.md §20, docs/CMP-MOBILE.md §3.16).
+// The Expo config plugin: an Expo app needs no native edit (docs/MOBILE.md §20).
 //
 //   "plugins": [["@scruter/react-native", { "appId": "ATMONA02" }]]
 //
-// Scruter Analytics needs its "appId". Scruter CMP, taken with "scruter": { "cmp": true } in the app's package.json,
-// needs nothing here, or "trackingDescription" (Info.plist's NSUserTrackingUsageDescription) when the app asks Apple's
-// tracking prompt after the CMP. Works with development builds and EAS Build. Expo Go has no way to load a native module.
-const fs = require('fs');
-const path = require('path');
+// Works with development builds and EAS Build. Expo Go has no way to load a native module.
 const {
   createRunOncePlugin,
   withAppBuildGradle,
@@ -77,65 +73,20 @@ function setBundlePhase(script) {
   return script.replace(/^"/, () => `"${SOURCEMAP_LINE.replace(/"/g, '\\"')}\\n`);
 }
 
-/** The modules the app takes: its package.json's "scruter" key, as the podspec and android/build.gradle read it. */
-function modulesOf(projectRoot) {
-  let config = {};
-  try {
-    config = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')).scruter ?? {};
-  } catch {
-    // No package.json: the defaults.
-  }
-  return { analytics: config.analytics !== false, cmp: config.cmp === true };
-}
-
-/** Info.plist for Scruter CMP: the text of Apple's tracking prompt, when the app asks it (§3.9). */
-function setTrackingDescription(plist, text) {
-  if (text) plist.NSUserTrackingUsageDescription = text;
-  return plist;
-}
-
 function withScruter(config, props = {}) {
-  const modules = modulesOf(config._internal?.projectRoot ?? process.cwd());
-  const tracking = props.trackingDescription;
-  if (tracking !== undefined && (typeof tracking !== 'string' || !tracking.trim())) {
-    throw new Error('[Scruter] "trackingDescription" is the text of Apple\'s tracking prompt: a sentence');
+  const appId = props.appId;
+  if (!appId || !/^[A-Z0-9_-]{1,32}$/.test(appId)) {
+    throw new Error('[Scruter] the plugin needs { "appId": "ATMONA02" }, the App identifier of App settings › SDK');
   }
-  if (tracking && !modules.cmp) {
-    throw new Error('[Scruter] "trackingDescription" is for Scruter CMP: add "scruter": { "cmp": true } to package.json');
-  }
-  let out = config;
-  if (modules.analytics) {
-    const appId = props.appId;
-    if (!appId || !/^[A-Z0-9_-]{1,32}$/.test(appId)) {
-      throw new Error(
-        '[Scruter] the plugin needs { "appId": "ATMONA02" }, the App identifier of App settings › SDK (or "scruter": { "analytics": false } in package.json for Scruter CMP alone)',
-      );
-    }
-    const options = { appId, attribution: props.attribution !== false };
-    out = withInfoPlist(out, (c) => {
-      c.modResults = setInfoPlist(c.modResults, options);
-      return c;
-    });
-    out = withAppBuildGradle(out, (c) => {
-      c.modResults.contents = setAppGradle(c.modResults.contents, options);
-      return c;
-    });
-    out = withXcodeProject(out, (c) => {
-      const phases = c.modResults.hash.project.objects.PBXShellScriptBuildPhase ?? {};
-      for (const phase of Object.values(phases)) {
-        if (typeof phase === 'object' && /react-native-xcode\.sh/.test(phase.shellScript ?? '')) {
-          phase.shellScript = setBundlePhase(phase.shellScript);
-        }
-      }
-      return c;
-    });
-  }
-  if (tracking) {
-    out = withInfoPlist(out, (c) => {
-      c.modResults = setTrackingDescription(c.modResults, tracking.trim());
-      return c;
-    });
-  }
+  const options = { appId, attribution: props.attribution !== false };
+  let out = withInfoPlist(config, (c) => {
+    c.modResults = setInfoPlist(c.modResults, options);
+    return c;
+  });
+  out = withAppBuildGradle(out, (c) => {
+    c.modResults.contents = setAppGradle(c.modResults.contents, options);
+    return c;
+  });
   out = withGradleProperties(out, (c) => {
     const entry = c.modResults.find((p) => p.type === 'property' && p.key === 'android.minSdkVersion');
     const value = raised(entry?.value, String(MIN_ANDROID), config.sdkVersion);
@@ -148,6 +99,15 @@ function withScruter(config, props = {}) {
     if (value) c.modResults['ios.deploymentTarget'] = value;
     return c;
   });
+  out = withXcodeProject(out, (c) => {
+    const phases = c.modResults.hash.project.objects.PBXShellScriptBuildPhase ?? {};
+    for (const phase of Object.values(phases)) {
+      if (typeof phase === 'object' && /react-native-xcode\.sh/.test(phase.shellScript ?? '')) {
+        phase.shellScript = setBundlePhase(phase.shellScript);
+      }
+    }
+    return c;
+  });
   return out;
 }
 
@@ -156,5 +116,3 @@ module.exports.setAppGradle = setAppGradle;
 module.exports.setBundlePhase = setBundlePhase;
 module.exports.setInfoPlist = setInfoPlist;
 module.exports.raised = raised;
-module.exports.modulesOf = modulesOf;
-module.exports.setTrackingDescription = setTrackingDescription;

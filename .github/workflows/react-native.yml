@@ -1,15 +1,13 @@
 # The React Native SDK: Jest, the conformance kit and the budget; the example's release build on every architecture and
-# on the oldest and latest React Native, on an Android emulator and an iOS simulator; Expo's config plugin. Scruter CMP:
-# the example with the CMP on an emulator and a simulator against the CMP's stub ingest, and what each module adds
-# (docs/CMP-MOBILE.md §3.16).
+# on the oldest and latest React Native, on an Android emulator and an iOS simulator; Expo's config plugin.
 name: react-native
 
 on:
   push:
     branches: ["main", "wip/**"]
-    paths: ["react-native/**", "ios/Sources/**", "ios/scripts/cmp_stub_ingest.py", "android/scruter-android/**", "android/scruter-cmp/**", "Scruter.podspec", "protocol/**", ".github/workflows/react-native.yml"]
+    paths: ["react-native/**", "ios/Sources/**", "android/scruter-android/**", "Scruter.podspec", "protocol/**", ".github/workflows/react-native.yml"]
   pull_request:
-    paths: ["react-native/**", "ios/Sources/**", "ios/scripts/cmp_stub_ingest.py", "android/scruter-android/**", "android/scruter-cmp/**", "Scruter.podspec", "protocol/**", ".github/workflows/react-native.yml"]
+    paths: ["react-native/**", "ios/Sources/**", "android/scruter-android/**", "Scruter.podspec", "protocol/**", ".github/workflows/react-native.yml"]
   workflow_dispatch:
   workflow_call:
 
@@ -197,9 +195,6 @@ jobs:
       fail-fast: false
       matrix:
         sdk: ["57", "58"]
-        mode: [""]
-        include:
-          - { sdk: "58", mode: cmp }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -210,15 +205,15 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
-      - name: The Android SDKs in the local Maven repository
+      - name: The Android SDK in the local Maven repository
         working-directory: android
-        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishToMavenLocal :scruter-cmp:publishToMavenLocal
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishToMavenLocal
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
       - name: An Expo app, its plugin, no native edit
-        run: react-native/scripts/expo-check.sh android ${{ matrix.sdk }} ${{ matrix.mode }}
+        run: react-native/scripts/expo-check.sh android ${{ matrix.sdk }}
 
   expo-ios:
     runs-on: macos-15
@@ -233,191 +228,3 @@ jobs:
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
       - name: An Expo app, its plugin, pod install from npm alone
         run: react-native/scripts/expo-check.sh ios 57
-      # Scruter CMP alone on SDK 57: SDK 58's own Swift (expo-modules-jsi) does not compile with Xcode 26.3 (2026-11-22);
-      # the expo job checks SDK 58 with the CMP alone on Android.
-      - name: Scruter CMP alone, on the SDK of the first app in production
-        if: ${{ !cancelled() }}
-        run: react-native/scripts/expo-check.sh ios 57 cmp
-
-  # Scruter CMP: the example with the CMP (setup.mjs --cmp) on an emulator, against the CMP's stub ingest; the oldest
-  # React Native on the old architecture, the latest on the new one.
-  cmp-android:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { rn: "0.73.11", arch: old }
-          - { rn: "0.88.1", arch: new }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-      - uses: gradle/actions/setup-gradle@v4
-      - name: The Android SDKs in the local Maven repository
-        working-directory: android
-        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishToMavenLocal :scruter-cmp:publishToMavenLocal
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - name: The example with Scruter CMP
-        working-directory: react-native/example
-        run: node setup.mjs --rn ${{ matrix.rn }} --arch ${{ matrix.arch }} --check --cmp
-      # A debug build, served by Metro: the JavaScript reload is a development tool.
-      - name: Debug build
-        working-directory: react-native/example/android
-        env:
-          ORG_GRADLE_PROJECT_reactNativeArchitectures: x86_64
-        run: |
-          ./gradlew --no-daemon --max-workers=3 :app:assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk /tmp/cmp.apk
-      - name: Maestro
-        run: |
-          curl -fsSL -o /tmp/maestro.zip "https://github.com/mobile-dev-inc/maestro/releases/download/cli-$MAESTRO_VERSION/maestro.zip"
-          unzip -q /tmp/maestro.zip -d "$HOME"
-          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          target: default
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
-          working-directory: react-native
-          script: node scripts/cmp-device-check.mjs android /tmp/cmp.apk
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cmp-android-${{ matrix.rn }}-${{ matrix.arch }}
-          path: react-native/build/cmp-device-check
-          retention-days: 7
-
-  cmp-ios:
-    runs-on: macos-15
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { rn: "0.73.11", arch: old }
-          - { rn: "0.88.1", arch: new }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - name: Toolchain
-        run: |
-          sudo xcode-select -s "/Applications/Xcode_16.4.app"
-          xcodebuild -version
-      - name: The example with Scruter CMP
-        working-directory: react-native/example
-        run: node setup.mjs --rn ${{ matrix.rn }} --arch ${{ matrix.arch }} --check --cmp
-      - name: Pods
-        working-directory: react-native/example/ios
-        env:
-          RCT_NEW_ARCH_ENABLED: ${{ matrix.arch == 'new' && '1' || '0' }}
-        run: pod install
-      # A debug build, served by Metro: the JavaScript reload is a development tool.
-      - name: Debug build for the simulator
-        id: build
-        working-directory: react-native/example/ios
-        run: |
-          udid=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
-          d = json.load(sys.stdin)["devices"]
-          best = None
-          for rt, devs in d.items():
-              if "iOS" not in rt: continue
-              for x in devs:
-                  if x["name"].startswith("iPhone"):
-                      if best is None or rt > best[0]: best = (rt, x["udid"])
-          print(best[1])')
-          echo "udid=$udid" >> "$GITHUB_OUTPUT"
-          xcodebuild -workspace ScruterExample.xcworkspace -scheme ScruterExample \
-            -configuration Debug -destination "id=$udid" -derivedDataPath build CODE_SIGN_IDENTITY=- \
-            -quiet build
-      - name: Maestro
-        run: |
-          curl -fsSL -o /tmp/maestro.zip "https://github.com/mobile-dev-inc/maestro/releases/download/cli-$MAESTRO_VERSION/maestro.zip"
-          unzip -q /tmp/maestro.zip -d "$HOME"
-          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
-      - name: Device check
-        working-directory: react-native
-        env:
-          MAESTRO_DRIVER_STARTUP_TIMEOUT: "300000"
-        run: |
-          xcrun simctl boot "${{ steps.build.outputs.udid }}"
-          xcrun simctl bootstatus "${{ steps.build.outputs.udid }}" -b
-          node scripts/cmp-device-check.mjs ios example/ios/build/Build/Products/Debug-iphonesimulator/ScruterExample.app
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cmp-ios-${{ matrix.rn }}-${{ matrix.arch }}
-          path: react-native/build/cmp-device-check
-          retention-days: 7
-
-  # What Scruter CMP adds to a release build, and M2: Analytics alone, both, the CMP alone, each carrying only its code.
-  cmp-size-android:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 75
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-      - uses: gradle/actions/setup-gradle@v4
-      - name: The Android SDKs in the local Maven repository
-        working-directory: android
-        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishToMavenLocal :scruter-cmp:publishToMavenLocal
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - name: The example
-        working-directory: react-native/example
-        run: node setup.mjs --rn 0.88.1 --arch new --cmp
-      - name: Three builds
-        working-directory: react-native
-        run: |
-          node scripts/cmp-size.mjs android
-          cat build/cmp-size-android.txt >> "$GITHUB_STEP_SUMMARY"
-
-  cmp-size-ios:
-    runs-on: macos-15
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Toolchain
-        run: sudo xcode-select -s "/Applications/Xcode_16.4.app"
-      - name: The example
-        working-directory: react-native/example
-        run: node setup.mjs --rn 0.88.1 --arch new --cmp
-      - name: Three builds
-        working-directory: react-native
-        run: |
-          node scripts/cmp-size.mjs ios
-          cat build/cmp-size-ios.txt >> "$GITHUB_STEP_SUMMARY"

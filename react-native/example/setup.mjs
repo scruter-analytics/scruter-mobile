@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 // Generates the example's project for a React Native version: `android/`, `ios/`, the JavaScript toolchain, then wires
 // the SDK in as an app would (the packed npm package, autolinking, the app's Gradle and CocoaPods settings).
-//   node setup.mjs [--rn 0.88.1] [--arch new|old] [--check] [--metro-helper] [--cmp [only]]
-// `--cmp` adds Scruter CMP ("scruter": { "cmp": true } in package.json, its screen); `--cmp only` leaves Scruter Analytics
-// out ("analytics": false), as an app that takes the CMP alone.
+//   node setup.mjs [--rn 0.88.1] [--arch new|old] [--check] [--metro-helper]
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -22,7 +20,6 @@ const rn = opt('rn', '0.88.1');
 const arch = opt('arch', 'new');
 const check = flag('check');
 const metroHelper = flag('metro-helper');
-const cmpMode = flag('cmp') ? (opt('cmp', '') === 'only' ? 'only' : 'both') : null;
 const minor = Number(rn.split('.')[1]);
 const APP_ID = 'EXAMPLE1';
 
@@ -74,7 +71,6 @@ edit(join(here, 'package.json'), (text) => {
   p.name = 'scruter-example';
   p.private = true;
   p.dependencies = { ...p.dependencies, ...navigation, '@scruter/react-native': `file:${tarball}` };
-  if (cmpMode) p.scruter = cmpMode === 'only' ? { cmp: true, analytics: false } : { cmp: true };
   return `${JSON.stringify(p, null, 2)}\n`;
 });
 run('npm', ['install', '--no-audit', '--no-fund', '--legacy-peer-deps']);
@@ -90,14 +86,8 @@ const local = ${host ?? 'undefined'};
 export const config = {
   appId: '${APP_ID}',
   debug: ${check ? 'true' : '__DEV__'},
-  analytics: ${cmpMode !== 'only'},
   ...(local ? { endpoint: local, apiEndpoint: local } : {}),
 };
-
-/** Scruter CMP (setup.mjs --cmp): its app id, and the local stub of the ingest for the device check. */
-export const cmp: { appId: string; endpoint?: string; debug: boolean } | null = ${
-    cmpMode ? `{ appId: 'EXMPL02', debug: true${check ? ", endpoint: 'http://127.0.0.1:8765'" : ''} }` : 'null'
-  };
 `,
 );
 if (metroHelper) {
@@ -142,10 +132,4 @@ edit(plist, (t) =>
 if (check) {
   edit(plist, (t) => t.replace(/<key>NSAppTransportSecurity<\/key>\s*<dict>/, '<key>NSAppTransportSecurity</key>\n\t<dict>\n\t\t<key>NSAllowsArbitraryLoads</key>\n\t\t<true/>'));
 }
-if (cmpMode) {
-  // Apple's tracking prompt after the CMP (CMP.md, ATT): its text.
-  edit(plist, (t) =>
-    t.replace('</dict>\n</plist>', '\t<key>NSUserTrackingUsageDescription</key>\n\t<string>To show you ads about the bowls you liked.</string>\n</dict>\n</plist>'),
-  );
-}
-console.log(`\nReady: React Native ${rn}, ${arch} architecture${check ? ', self-check' : ''}${cmpMode ? `, Scruter CMP (${cmpMode})` : ''}.`);
+console.log(`\nReady: React Native ${rn}, ${arch} architecture${check ? ', self-check' : ''}.`);

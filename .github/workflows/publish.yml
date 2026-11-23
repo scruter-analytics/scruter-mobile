@@ -1,6 +1,5 @@
 # Publishes the four SDKs from a tag `v<version>` (docs/RUNBOOK.md of the Scruter monorepo, « Publishing the mobile
-# SDKs »): every SDK's checks, Scruter CMP's included, then Maven Central (Analytics, CMP and the symbols plugin) and the
-# Gradle Plugin Portal, npm and pub.dev. A failed job stops the
+# SDKs »): every SDK's checks, then Maven Central and the Gradle Plugin Portal, npm and pub.dev. A failed job stops the
 # next ones; a rerun skips what a registry already has, because a published version is immutable. The bare tag and the
 # GitHub release follow by hand, once this run is green: they are in the owner's name, not the workflow's.
 #
@@ -88,16 +87,8 @@ jobs:
     needs: prepare
     uses: ./.github/workflows/react-native.yml
 
-  checks-ios-cmp:
-    needs: prepare
-    uses: ./.github/workflows/ios-cmp.yml
-
-  checks-android-cmp:
-    needs: prepare
-    uses: ./.github/workflows/android-cmp.yml
-
   android:
-    needs: [prepare, checks-ios, checks-android, checks-flutter, checks-react-native, checks-ios-cmp, checks-android-cmp]
+    needs: [prepare, checks-ios, checks-android, checks-flutter, checks-react-native]
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
@@ -132,8 +123,7 @@ jobs:
           SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
         run: |
-          ./gradlew --no-daemon --max-workers=3 --console=plain :scruter-android:publishReleasePublicationToStagingRepository \
-            :scruter-cmp:publishReleasePublicationToStagingRepository :scruter-cmp-compose:publishReleasePublicationToStagingRepository
+          ./gradlew --no-daemon --max-workers=3 --console=plain :scruter-android:publishReleasePublicationToStagingRepository
           ./gradlew --no-daemon --max-workers=3 --console=plain -p scruter-symbols-gradle-plugin publishAllPublicationsToStagingRepository
       - name: The key Maven Central reads
         if: steps.published.outputs.central != 'true'

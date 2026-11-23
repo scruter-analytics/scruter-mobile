@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Scruter'
-  s.version          = '1.2.0'
+  s.version          = '1.3.0'
   s.summary          = 'Scruter Analytics for iOS and macOS: privacy-first app analytics, no IDFA, no ATT prompt, no banner.'
   s.description      = <<-DESC
     Screens, events, sessions, retention, crashes and Screen analysis for iOS apps, and screens, events, sessions

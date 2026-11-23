@@ -36,22 +36,15 @@ from pathlib import Path
 NAMESPACE = "net.scruter"
 SIGNING_FINGERPRINT = "3BDEE583E8C3BD91800986FBC2F008320316D8D7"
 
-# Everything Maven Central receives, in one deployment: all or none (`packaging` of each POM).
+# Everything Maven Central receives, in one deployment: both or neither (`packaging` of each POM).
 ARTIFACTS = {
     ("net.scruter", "scruter-android"): "aar",
-    ("net.scruter", "scruter-cmp"): "aar",
-    ("net.scruter", "scruter-cmp-compose"): "aar",
     ("net.scruter", "scruter-symbols-gradle-plugin"): "jar",
     # The plugin marker: `id("net.scruter.symbols")` also resolves from mavenCentral().
     ("net.scruter.symbols", "net.scruter.symbols.gradle.plugin"): "pom",
 }
 # The artifacts the Central Portal is asked about: the marker cannot exist without the plugin.
-CENTRAL_PUBLISHED = [
-    ("net.scruter", "scruter-android"),
-    ("net.scruter", "scruter-cmp"),
-    ("net.scruter", "scruter-cmp-compose"),
-    ("net.scruter", "scruter-symbols-gradle-plugin"),
-]
+CENTRAL_PUBLISHED = [("net.scruter", "scruter-android"), ("net.scruter", "scruter-symbols-gradle-plugin")]
 
 NPM_PACKAGE = "@scruter/react-native"
 PUB_PACKAGE = "scruter_flutter"
@@ -90,11 +83,26 @@ def central_authorization() -> str:
     return "Bearer " + base64.b64encode(f"{username}:{password}".encode()).decode()
 
 
-def request(url: str, *, method: str = "GET", headers: dict | None = None, body: bytes | None = None):
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """A redirection is an answer of its own (`HTTPError` with its 3xx status), never followed."""
+
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+def request(
+    url: str,
+    *,
+    method: str = "GET",
+    headers: dict | None = None,
+    body: bytes | None = None,
+    follow_redirects: bool = True,
+):
     """(status, body); a network failure or a server error is `Unknown`, never "not published"."""
     req = urllib.request.Request(url, data=body, method=method, headers=headers or {})
+    opener = urllib.request.build_opener() if follow_redirects else urllib.request.build_opener(NoRedirect)
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as res:
+        with opener.open(req, timeout=TIMEOUT) as res:
             return res.status, res.read()
     except urllib.error.HTTPError as err:
         payload = err.read()
@@ -124,14 +132,24 @@ def published_central(version: str) -> bool:
             raise Unknown(f"the Central Portal answered {status} about {name}")
         found.append(bool(json.loads(body).get("published")))
     if any(found) and not all(found):
-        # One deployment holds them all: part of it published means someone uploaded by hand.
+        # One deployment holds both: half of it published means someone uploaded by hand.
         raise Unknown(f"only part of {version} is on Maven Central: {dict(zip(CENTRAL_PUBLISHED, found))}")
     return all(found)
 
 
 def published_portal(version: str) -> bool:
+    """The Portal's own answer. Its m2 repository redirects (303) to Maven Central for what it does not host, and the
+    plugin marker is on Maven Central (it travels in the Central bundle): followed, that redirection would say « the
+    Portal has it » for a version the Portal never accepted (1.2.0, refused by its review). Only a 200 from the Portal
+    itself counts."""
     path = PLUGIN_ID.replace(".", "/")
-    return exists(f"{plugin_portal()}/{path}/{PLUGIN_ID}.gradle.plugin/{version}/{PLUGIN_ID}.gradle.plugin-{version}.pom")
+    url = f"{plugin_portal()}/{path}/{PLUGIN_ID}.gradle.plugin/{version}/{PLUGIN_ID}.gradle.plugin-{version}.pom"
+    status, _ = request(url, follow_redirects=False)
+    if status == 200:
+        return True
+    if status == 404 or 300 <= status < 400:
+        return False
+    raise Unknown(f"{url} answered {status}")
 
 
 def published_npm(version: str) -> bool:

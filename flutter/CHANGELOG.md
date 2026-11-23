@@ -1,3 +1,10 @@
+## 1.3.0
+
+Scruter CMP leaves this package for its own, `scruter_cmp_flutter`
+([scruter-cmp-mobile](https://github.com/scruter-analytics/scruter-cmp-mobile)), version 1.0.0: `scruter_flutter` is
+Scruter Analytics alone again and ignores the `scruter:` block of the app's `pubspec.yaml`. An app that takes both adds
+both packages. Scruter Analytics does not change.
+
 ## 1.2.0
 
 Scruter CMP: `ScruterCMP`, the native consent sheet of Scruter CMP over the iOS and Android modules, for an app that

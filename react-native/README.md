@@ -14,9 +14,11 @@ JavaScript adds what they cannot see: your routes, your JavaScript errors and ho
 
 React Native 0.73 and later, new and old architecture, Hermes and JavaScriptCore. iOS 15, Android 7 (API 24). MIT.
 
-The same package carries **Scruter CMP**, the consent sheet of [Scruter CMP](https://scruter.net/cmp) with the proof of
-every choice, for an app that takes it (`"scruter": { "cmp": true }` in its `package.json`): see [CMP.md](CMP.md). An app
-carries only the native code of the modules it takes; without that key, nothing changes.
+The consent sheet of [Scruter CMP](https://scruter.net/cmp) is its own package, `@scruter/react-native-cmp`
+([scruter-cmp-mobile](https://github.com/scruter-analytics/scruter-cmp-mobile)): an app takes one, the other or both.
+Until 1.2.0 it shipped in this package, behind `"scruter": { "cmp": true }` in the app's `package.json`; since 1.3.0
+this package is Scruter Analytics alone and ignores that key (an app that set `"analytics": false` takes
+`@scruter/react-native-cmp` instead of this package).
 
 ## Install
 

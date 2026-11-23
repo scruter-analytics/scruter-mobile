@@ -13,7 +13,7 @@ public final class ScruterTeamLink extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ScruterAnalyticsPlugin.teamLink(getIntent());
+        ScruterFlutterPlugin.teamLink(getIntent());
         Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
         if (launch != null) {
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -26,8 +26,8 @@ whose trial is running (full collection). The backend's tests create it themselv
 `mobile_e2e::conformance_fixtures`, which also checks the stored rows). Placeholders replaced per fixture: `{{APP}}`, `{{BATCH}}`, `{{BATCH2}}`, `{{SESSION}}`,
 `{{DAILY}}` (random ids), `{{TODAY}}` (date in Europe/Paris), `{{NOW}}`, `{{NOW-<ms>}}`, `{{NOW+<ms>}}` (numbers, ms).
 
-The CMP module of the SDKs (docs/CMP-MOBILE.md) has its own kit in `cmp/`: the `cmp-*` schemas, golden bodies and the
-vectors the site script shares (`cmp/README.md`, `node cmp/check.mjs`).
+Scruter CMP's SDKs have their own kit, in their own repository (`protocol/` of
+https://github.com/scruter-analytics/scruter-cmp-mobile).
 
 SDK test suites use the schemas to check the batches they build (record the request body, then
 `node validate.mjs batch <file>`), and the fixtures' bodies as examples of every item kind. A protocol change edits

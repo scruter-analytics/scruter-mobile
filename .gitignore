@@ -5,6 +5,3 @@ DerivedData/
 ios/Example/*.xcodeproj/
 ios/Example/ScruterExample/Info.plist
 __pycache__/
-ios/ExampleCMP/*.xcodeproj/
-ios/ExampleCMP/SwiftUIApp/Info.plist
-ios/ExampleCMP/UIKitApp/Info.plist

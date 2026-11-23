@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 # An Expo app with the config plugin and Expo Router, as a development build: `expo prebuild` writes every native setting,
 # the bundle resolves, and the app compiles.
-#   expo-check.sh android|ios [sdk] [cmp]
-# SDK 57 is the stack of the first app in production (React Native 0.86, new architecture). `cmp`: an app with Scruter
-# CMP alone ("scruter": { "cmp": true, "analytics": false }), the plugin's tracking text and no Analytics setting.
+#   expo-check.sh android|ios [sdk]
+# SDK 57 is the stack of the first app in production (React Native 0.86, new architecture).
 set -euo pipefail
 platform="${1:-android}"
 sdk="${2:-57}"
-cmp="${3:-}"
 here="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -30,29 +28,14 @@ const c = JSON.parse(fs.readFileSync('app.json', 'utf8'));
 c.expo.scheme = 'scruterexpo';
 c.expo.ios = { ...c.expo.ios, bundleIdentifier: 'net.scruter.expoexample' };
 c.expo.android = { ...c.expo.android, package: 'net.scruter.expoexample' };
-const cmp = process.argv[1] === 'cmp';
-const options = cmp ? { trackingDescription: 'To show you ads about the bowls you liked.' } : { appId: 'EXAMPLE1' };
-c.expo.plugins = [...(c.expo.plugins ?? []), 'expo-router', ['@scruter/react-native', options]];
+c.expo.plugins = [...(c.expo.plugins ?? []), 'expo-router', ['@scruter/react-native', { appId: 'EXAMPLE1' }]];
 fs.writeFileSync('app.json', JSON.stringify(c, null, 2));
 const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 p.main = 'expo-router/entry';
-if (cmp) p.scruter = { cmp: true, analytics: false };
 fs.writeFileSync('package.json', JSON.stringify(p, null, 2));
-" "$cmp"
+"
 rm -f App.tsx index.ts
 mkdir -p app
-if [ "$cmp" = cmp ]; then
-cat > app/_layout.tsx <<'TSX'
-import { Stack } from 'expo-router';
-import { ScruterCMP } from '@scruter/react-native';
-
-ScruterCMP.start({ appId: 'EXMPL02' });
-
-export default function RootLayout() {
-  return <Stack />;
-}
-TSX
-else
 cat > app/_layout.tsx <<'TSX'
 import { useEffect } from 'react';
 import { Stack, useNavigationContainerRef } from 'expo-router';
@@ -66,7 +49,6 @@ export default function RootLayout() {
   return <Stack />;
 }
 TSX
-fi
 # The README's native intent: the team phones' link is the SDK's, never a route (« Unmatched Route »).
 cat > 'app/+native-intent.tsx' <<'TSX'
 export function redirectSystemPath({ path, initial }: { path: string; initial: boolean }) {
@@ -92,16 +74,10 @@ node -e "console.log('Expo', require('expo/package.json').version, 'React Native
 npx expo export --platform "$platform" --output-dir "$work/export"
 npx expo prebuild --no-install --platform all
 
-if [ "$cmp" = cmp ]; then
-  grep -q 'NSUserTrackingUsageDescription' ios/*/Info.plist
-  if grep -q 'scruter-example1\|AttributionCopyEndpoint' ios/*/Info.plist; then echo "an Analytics setting in a CMP-only app"; exit 1; fi
-  if grep -q 'scruterAppId' android/app/build.gradle; then echo "an Analytics setting in a CMP-only app"; exit 1; fi
-else
-  grep -q 'scruter-example1' ios/*/Info.plist
-  grep -q 'AttributionCopyEndpoint' ios/*/Info.plist
-  grep -q 'scruterAppId: "example1"' android/app/build.gradle
-  grep -q 'SOURCEMAP_FILE' ios/*.xcodeproj/project.pbxproj
-fi
+grep -q 'scruter-example1' ios/*/Info.plist
+grep -q 'AttributionCopyEndpoint' ios/*/Info.plist
+grep -q 'scruterAppId: "example1"' android/app/build.gradle
+grep -q 'SOURCEMAP_FILE' ios/*.xcodeproj/project.pbxproj
 if [ "$platform" = ios ]; then
   # Nothing from the CocoaPods trunk for the SDK: the package's pod compiles it.
   (cd ios && pod install)

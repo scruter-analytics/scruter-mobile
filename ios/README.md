@@ -24,7 +24,7 @@ https://github.com/scruter-analytics/scruter-mobile
 and add the **ScruterAnalytics** product to your app target. In a `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.2.0"),
+.package(url: "https://github.com/scruter-analytics/scruter-mobile", from: "1.3.0"),
 // …
 .product(name: "ScruterAnalytics", package: "scruter-mobile"),
 ```
@@ -33,7 +33,7 @@ and add the **ScruterAnalytics** product to your app target. In a `Package.swift
 git source needs no trunk):
 
 ```ruby
-pod 'Scruter', :git => 'https://github.com/scruter-analytics/scruter-mobile', :tag => '1.2.0'
+pod 'Scruter', :git => 'https://github.com/scruter-analytics/scruter-mobile', :tag => '1.3.0'
 ```
 
 ## Start: three lines

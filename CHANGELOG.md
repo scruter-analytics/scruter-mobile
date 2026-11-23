@@ -2,6 +2,19 @@
 
 One version for the four SDKs. The GitHub release of a version carries its section below.
 
+## 1.3.0
+
+Scruter CMP for apps moves to SDKs of its own, in their own repository
+([scruter-analytics/scruter-cmp-mobile](https://github.com/scruter-analytics/scruter-cmp-mobile)) and with their own
+versions, from 1.0.0: the Swift package `scruter-cmp-mobile` (product `ScruterCMP`) and the pod `ScruterCMP` from that
+repository, `net.scruter.cmp:scruter-cmp` and `net.scruter.cmp:scruter-cmp-compose` on Maven Central,
+`@scruter/react-native-cmp` on npm and `scruter_cmp_flutter` on pub.dev. This repository is Scruter Analytics alone
+again: no `ScruterCMP` product or pod, no `net.scruter:scruter-cmp` artifacts (Maven Central keeps their 1.2.0), and
+`@scruter/react-native` and `scruter_flutter` carry no CMP; they ignore the `scruter` key of the app's `package.json` or
+`pubspec.yaml` (an app that took the CMP alone with `analytics: false` replaces them with the CMP's packages). An app
+that takes both installs both, Scruter Analytics 1.3.0 or later beside the CMP's packages. Scruter Analytics itself
+does not change.
+
 ## 1.2.0
 
 iOS: Scruter CMP for apps, the module `ScruterCMP` (Swift Package Manager product `ScruterCMP`, CocoaPods pod

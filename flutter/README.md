@@ -17,9 +17,11 @@ referrer, openings and team phones. Flutter draws its own widgets, so everything
 
 Requirements: Flutter 3.22+, iOS 15+, Android 7 (API 24)+. MIT licence.
 
-The same package carries **Scruter CMP**, the consent sheet of [Scruter CMP](https://scruter.net/cmp) with the proof of
-every choice, for an app that takes it (`scruter: { cmp: true }` in its `pubspec.yaml`): see [CMP.md](CMP.md). An app
-carries only the native code of the modules it takes; without that key, nothing changes.
+The consent sheet of [Scruter CMP](https://scruter.net/cmp) is its own package, `scruter_cmp_flutter`
+([scruter-cmp-mobile](https://github.com/scruter-analytics/scruter-cmp-mobile)): an app takes one, the other or both.
+Until 1.2.0 it shipped in this package, behind `scruter: { cmp: true }` in the app's `pubspec.yaml`; since 1.3.0 this
+package is Scruter Analytics alone and ignores that block (an app that set `analytics: false` takes
+`scruter_cmp_flutter` instead of this package).
 
 ## Install
 

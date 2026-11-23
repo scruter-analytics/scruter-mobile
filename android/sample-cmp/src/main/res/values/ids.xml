@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <item name="status" type="id" />
-    <item name="privacy_choices" type="id" />
-    <item name="open_compose" type="id" />
-</resources>

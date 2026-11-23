@@ -1,7 +1,6 @@
 # The Flutter SDK: analyze, widget tests, conformance, upload_symbols; the Android and iOS builds, the size budget; the
 # example's self-check on an Android emulator (debug and release) and an iOS simulator, against a local server that
-# validates every payload. Scruter CMP: the example on an emulator and a simulator against the CMP's stub ingest, a hot
-# restart included, and what each module adds (docs/CMP-MOBILE.md §3.16).
+# validates every payload.
 name: Flutter
 
 on:
@@ -70,9 +69,9 @@ jobs:
           flutter-version: ${{ env.FLUTTER_MIN }}
           channel: stable
           cache: true
-      - name: The Android SDKs, in the staging repository the example reads
+      - name: The Android SDK, in the staging repository the example reads
         working-directory: android
-        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository :scruter-cmp:publishReleasePublicationToStagingRepository
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository
       - name: The bridge (Robolectric)
         working-directory: android
         run: ./gradlew --no-daemon --max-workers=3 :scruter-android:testDebugUnitTest --tests 'net.scruter.internal.WrapperTest'
@@ -121,9 +120,9 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: The Android SDKs
+      - name: The Android SDK
         working-directory: android
-        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository :scruter-cmp:publishReleasePublicationToStagingRepository
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository
       - name: Self-check builds
         working-directory: flutter/example
         run: |
@@ -225,155 +224,3 @@ jobs:
           file build/symbols/*
           dart run scruter_flutter:upload_symbols --dry-run
           dwarfdump --uuid build/ios/iphoneos/Runner.app/Frameworks/App.framework/App
-          # The example's pubspec.yaml takes Scruter CMP: Package.swift found it above the plugin.
-          grep -r -q -F "the CMP is off for this app (on: 0)" build/ios/iphoneos/Runner.app || { echo "Scruter CMP is not in the app"; exit 1; }
-
-  # Scruter CMP: the example under `flutter run` on an emulator, against the CMP's stub ingest, with a hot restart.
-  cmp-android:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    needs: dart
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: gradle/actions/setup-gradle@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_MIN }}
-          channel: stable
-          cache: true
-      - name: The Android SDKs
-        working-directory: android
-        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository :scruter-cmp:publishReleasePublicationToStagingRepository
-      - name: Maestro
-        run: |
-          curl -fsSL -o /tmp/maestro.zip "https://github.com/mobile-dev-inc/maestro/releases/download/cli-2.12.1/maestro.zip"
-          unzip -q /tmp/maestro.zip -d "$HOME"
-          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - uses: reactivecircus/android-emulator-runner@v2
-        env:
-          MAESTRO_CLI_NO_ANALYTICS: "1"
-        with:
-          api-level: 34
-          arch: x86_64
-          target: default
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
-          working-directory: flutter
-          script: node scripts/cmp-device-check.mjs android emulator-5554
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cmp-android
-          path: flutter/build/cmp-device-check/
-          retention-days: 7
-
-  # Reported, not blocking: after a hot restart, XCUITest sees no accessibility tree in the example (Flutter shows the new
-  # isolate's semantics late or not at all), so the flow « restart » fails on iOS whatever the CMP does. A hot restart
-  # exists only under `flutter run`; the same flow passes on Android (cmp-android) and the Dart tests cover the wrapper.
-  cmp-ios:
-    runs-on: macos-15
-    timeout-minutes: 60
-    needs: dart
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_MIN }}
-          channel: stable
-          cache: true
-      - name: The iOS sources in the plugin
-        run: flutter/scripts/sync-ios-sources.sh
-      - name: Maestro
-        run: |
-          curl -fsSL -o /tmp/maestro.zip "https://github.com/mobile-dev-inc/maestro/releases/download/cli-2.12.1/maestro.zip"
-          unzip -q /tmp/maestro.zip -d "$HOME"
-          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
-      - name: Simulator
-        id: sim
-        run: |
-          udid=$(xcrun simctl list devices available -j | node -e "
-            const d=JSON.parse(require('fs').readFileSync(0)).devices;
-            const k=Object.keys(d).filter(x=>x.includes('iOS')).sort().pop();
-            console.log(d[k].find(x=>x.name.startsWith('iPhone')).udid)")
-          xcrun simctl boot "$udid"
-          xcrun simctl bootstatus "$udid" -b
-          echo "udid=$udid" >> "$GITHUB_OUTPUT"
-      - name: Device check
-        working-directory: flutter
-        env:
-          MAESTRO_CLI_NO_ANALYTICS: "1"
-          MAESTRO_DRIVER_STARTUP_TIMEOUT: "300000"
-        run: node scripts/cmp-device-check.mjs ios "${{ steps.sim.outputs.udid }}"
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cmp-ios
-          path: flutter/build/cmp-device-check/
-          retention-days: 7
-
-  # What Scruter CMP adds to a release build, and M2: Analytics alone, both, the CMP alone, each carrying only its code.
-  cmp-size-android:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    needs: dart
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: gradle/actions/setup-gradle@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_MIN }}
-          channel: stable
-          cache: true
-      - name: The Android SDKs
-        working-directory: android
-        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository :scruter-cmp:publishReleasePublicationToStagingRepository
-      - name: Three builds
-        working-directory: flutter
-        run: |
-          node scripts/cmp-size.mjs android
-          cat build/cmp-size-android.txt >> "$GITHUB_STEP_SUMMARY"
-
-  cmp-size-ios:
-    runs-on: macos-15
-    timeout-minutes: 90
-    needs: dart
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_MIN }}
-          channel: stable
-          cache: true
-      - name: The iOS sources in the plugin
-        run: flutter/scripts/sync-ios-sources.sh
-      - name: Three builds
-        working-directory: flutter
-        run: |
-          node scripts/cmp-size.mjs ios
-          cat build/cmp-size-ios.txt >> "$GITHUB_STEP_SUMMARY"

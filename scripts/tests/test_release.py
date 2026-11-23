@@ -47,13 +47,14 @@ class FakeRegistry(http.server.BaseHTTPRequestHandler):
         for prefix, response in FakeRegistry.routes.items():
             if self.path.startswith(prefix):
                 if isinstance(response, list):
-                    status, payload = response.pop(0) if len(response) > 1 else response[0]
-                else:
-                    status, payload = response
+                    response = response.pop(0) if len(response) > 1 else response[0]
+                status, payload, *extra = response
                 break
         else:
-            status, payload = 404, b""
+            status, payload, extra = 404, b"", []
         self.send_response(status)
+        for name, value in (extra[0] if extra else {}).items():
+            self.send_header(name, value)
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
@@ -115,6 +116,24 @@ class Published(RegistryCase):
         }
         for name, check in release.PUBLISHED.items():
             self.assertTrue(check(VERSION), name)
+
+    def test_the_portal_redirecting_to_maven_central_is_not_the_portal(self):
+        # plugins.gradle.org/m2 sends what it does not host to Maven Central, where the marker is.
+        marker = f"/m2/net/scruter/symbols/net.scruter.symbols.gradle.plugin/{VERSION}/"
+        FakeRegistry.routes = {
+            marker: (303, b"", {"Location": f"{self.url}/central-repo{marker}"}),
+            "/central-repo/": (200, b"<project/>"),
+        }
+        self.assertFalse(release.published_portal(VERSION))
+        self.assertFalse(any(path.startswith("/central-repo/") for _, path, _ in FakeRegistry.calls))
+
+    def test_the_portal_answering_itself(self):
+        marker = f"/m2/net/scruter/symbols/net.scruter.symbols.gradle.plugin/{VERSION}/"
+        FakeRegistry.routes = {marker: (200, b"<project/>")}
+        self.assertTrue(release.published_portal(VERSION))
+        FakeRegistry.routes = {marker: (503, b"")}
+        with self.assertRaises(release.Unknown):
+            release.published_portal(VERSION)
 
     def test_central_is_asked_with_the_user_token(self):
         FakeRegistry.routes = {"/central/published": (200, b'{"published": false}')}

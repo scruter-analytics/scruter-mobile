@@ -1,5 +1,5 @@
 name: scruter_flutter_example
-description: The example of the Scruter Flutter SDK, a small shop with Scruter Analytics and Scruter CMP.
+description: The example of the Scruter Analytics Flutter SDK, a small shop.
 publish_to: none
 version: 1.0.0+1
 
@@ -20,7 +20,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-# The modules the app takes (CMP.md, « Install »): Scruter Analytics by default, Scruter CMP on request.
-scruter:
-  cmp: true

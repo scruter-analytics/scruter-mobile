@@ -101,7 +101,7 @@ export function validate(name, value, defName) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [name, file, def] = process.argv.slice(2);
   if (!name || !file) {
-    console.error('usage: node validate.mjs <batch|config|team-register|team-screen|symbols|cmp-config|cmp-hit|cmp-consent|cmp-sdks|cmp-sdk-catalogue> <file.json> [$defs name]');
+    console.error('usage: node validate.mjs <batch|config|team-register|team-screen|symbols> <file.json> [$defs name]');
     process.exit(2);
   }
   const errors = validate(name, JSON.parse(readFileSync(file, 'utf8')), def);
