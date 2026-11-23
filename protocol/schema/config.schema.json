@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scruter.net/schemas/mobile/v1/config.schema.json",
+  "title": "GET /m/v1/config (answer)",
+  "description": "docs/API.md §5.3, docs/MOBILE.md §3.16.",
+  "type": "object",
+  "required": ["v", "on", "e", "ttl"],
+  "properties": {
+    "v": {"const": 1},
+    "on": {"enum": [0, 1]},
+    "e": {"type": "string", "minLength": 1, "maxLength": 64},
+    "tz": {"type": "string", "minLength": 1, "maxLength": 64},
+    "aa": {"type": "integer", "minimum": 0, "maximum": 100},
+    "cr": {"enum": [0, 1]},
+    "xs": {"type": "array", "maxItems": 50, "items": {"type": "string", "minLength": 1, "maxLength": 120}},
+    "tp": {"enum": [0, 1]},
+    "ttl": {"type": "integer", "minimum": 60, "maximum": 86400}
+  }
+}

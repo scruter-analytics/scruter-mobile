@@ -1,0 +1,83 @@
+# The journey of ../../scripts/device-check.mjs: real touches on every kind of element the SDK names.
+appId: net.scruter.rnexample
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "open_products"
+    timeout: 30000
+- tapOn:
+    id: "welcome"
+- tapOn:
+    id: "welcome_event"
+- tapOn:
+    id: "open_products"
+- extendedWaitUntil:
+    visible:
+      id: "add_to_cart"
+    timeout: 15000
+- tapOn:
+    id: "add_to_cart"
+    index: 2
+- swipe:
+    direction: UP
+    duration: 400
+- waitForAnimationToEnd
+- tapOn:
+    id: "add_to_cart"
+    index: 3
+- tapOn:
+    id: "product_row"
+    index: 3
+- extendedWaitUntil:
+    visible:
+      id: "product"
+    timeout: 15000
+- tapOn:
+    id: "address"
+- tapOn:
+    id: "ignored"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "buy"
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: "plain_text"
+    optional: true
+- tapOn:
+    id: "buy"
+- extendedWaitUntil:
+    visible:
+      id: "postal_code"
+    timeout: 15000
+- tapOn:
+    id: "postal_code"
+- inputText: "12"
+- tapOn:
+    id: "submit"
+- tapOn:
+    id: "postal_code"
+- inputText: "345"
+- tapOn:
+    id: "password"
+- inputText: "secret"
+- hideKeyboard:
+    optional: true
+- tapOn:
+    id: "gift"
+- tapOn:
+    id: "submit"
+- extendedWaitUntil:
+    visible:
+      id: "open_settings"
+    timeout: 15000
+- tapOn:
+    id: "open_settings"
+- extendedWaitUntil:
+    visible:
+      id: "soft_error"
+    timeout: 15000
+- tapOn:
+    id: "soft_error"

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- The native SDK's QR-code activity needs the app id at build time, which a Flutter app gives in Dart: left
+             out, so that adding the package needs no Gradle change. The team-phone link goes through
+             net.scruter.flutter.ScruterTeamLink, declared by the app (README, "Team phones"). -->
+        <activity
+            android:name="net.scruter.internal.TeamLinkActivity"
+            tools:node="remove" />
+    </application>
+</manifest>

@@ -1,0 +1,26 @@
+# The console's QR code, on a phone whose app is not running. The token is the local server's.
+appId: net.scruter.rnexample
+---
+- stopApp
+- openLink: "scruter-example1://team?t=scr_qr_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+# iOS asks before a scheme opens an app, not always at once, and a busy runner takes over a minute to start it: "Open" is tapped
+# for as long as that takes. Then the SDK asks the person holding the phone (docs/MOBILE.md §3.12): no answer, no team phone.
+- repeat:
+    times: 80
+    while:
+      notVisible:
+        text: "Add"
+    commands:
+      - tapOn:
+          text: "Open"
+          optional: true
+- extendedWaitUntil:
+    visible:
+      text: "Add"
+    timeout: 30000
+- tapOn:
+    text: "Add"
+- extendedWaitUntil:
+    visible:
+      id: "open_products"
+    timeout: 60000

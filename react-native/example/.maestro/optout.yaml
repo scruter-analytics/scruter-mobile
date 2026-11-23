@@ -1,0 +1,16 @@
+# The user's choice: nothing is sent afterwards.
+appId: net.scruter.rnexample
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "open_settings"
+    timeout: 30000
+- tapOn:
+    id: "open_settings"
+- extendedWaitUntil:
+    visible:
+      id: "measurement"
+    timeout: 15000
+- tapOn:
+    id: "measurement"

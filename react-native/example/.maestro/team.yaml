@@ -1,0 +1,21 @@
+# A team phone's run after the QR code: each screen is captured once.
+appId: net.scruter.rnexample
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "open_products"
+    timeout: 30000
+- tapOn:
+    id: "open_products"
+- extendedWaitUntil:
+    visible:
+      id: "add_to_cart"
+    timeout: 15000
+- tapOn:
+    id: "product_row"
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: "product"
+    timeout: 15000

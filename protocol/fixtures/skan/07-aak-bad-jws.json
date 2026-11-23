@@ -1,0 +1,25 @@
+{
+  "description": "An AdAttributionKit copy whose JWS is not Apple's: answered 200, not stored.",
+  "schema": null,
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/.well-known/appattribution/report-attribution/",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "jws-string": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImFwcGxlLWNhcy1pZGVudGlmaWVyLzAifQ.eyJhZHZlcnRpc2VkLWl0ZW0taWRlbnRpZmllciI6NTI1NDYzMDI5fQ.c2lnbmF0dXJl"
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    }
+  ],
+  "stored": {
+    "skan_postbacks": 0
+  }
+}

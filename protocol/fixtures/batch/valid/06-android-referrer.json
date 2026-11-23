@@ -1,0 +1,94 @@
+{
+  "description": "An Android first session with the Play Install Referrer: the utm_* values are kept, the click id is dropped.",
+  "schema": "batch",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH}}",
+          "t": "{{NOW}}",
+          "sdk": "android/1.0.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 1,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 1,
+              "p": "android",
+              "bid": "fr.scruter.conformance",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "15",
+              "m": "Google Pixel 8",
+              "f": "phone",
+              "l": "fr",
+              "o": {
+                "k": "icon"
+              },
+              "c": {
+                "sv": 2,
+                "ev": 1,
+                "dur": 95,
+                "en": "Accueil",
+                "ex": "Fiche produit",
+                "rev": {
+                  "EUR": 3400
+                },
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-20000}}"
+              },
+              "ins": {
+                "src": "google_play",
+                "ref": "utm_source=newsletter&utm_medium=email&utm_campaign=ateliers-noel&gclid=Cj0KCQiA"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Accueil",
+              "t": "{{NOW-110000}}"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    }
+  ],
+  "stored": {
+    "installs": 1,
+    "install": {
+      "store": "google_play",
+      "utm_source": "newsletter",
+      "utm_medium": "email",
+      "utm_campaign": "ateliers-noel"
+    },
+    "session": {
+      "platform": "android",
+      "os": "Android",
+      "utm_source": "newsletter"
+    },
+    "nothing_contains": [
+      "Cj0KCQiA"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Keyed tags of the SDK (docs/MOBILE.md §3.5, §3.9, §3.11). In a layout:
+         <tag android:id="@id/scruter_mask" android:value="true" />, or from code view.scruterMask = true. -->
+    <item name="scruter_mask" type="id" />
+    <item name="scruter_id" type="id" />
+    <item name="scruter_form" type="id" />
+    <item name="scruter_ignore" type="id" />
+    <!-- Internal: a field already watched for edits. -->
+    <item name="scruter_watched" type="id" />
+</resources>

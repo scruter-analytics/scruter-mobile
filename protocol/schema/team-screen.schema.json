@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scruter.net/schemas/mobile/v1/team-screen.schema.json",
+  "title": "POST /m/v1/team/screens: the `meta` and `tree` parts",
+  "description": "docs/API.md §5.3, docs/MOBILE.md §3.11–§3.12, §6.8. The `image` part is a JPEG ≤ 2 MB, ≤ 4 096 × 20 000 px.",
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "required": ["screen", "app_version", "platform", "form", "width", "height"],
+      "properties": {
+        "screen": {"type": "string", "minLength": 1, "maxLength": 120},
+        "app_version": {"type": "string", "minLength": 1, "maxLength": 40},
+        "platform": {"enum": ["ios", "android"]},
+        "form": {"enum": ["phone", "tablet"]},
+        "width": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "height": {"type": "integer", "minimum": 1, "maximum": 20000},
+        "scale": {"type": "number", "exclusiveMinimum": 0, "maximum": 4},
+        "taken_at": {"type": "string", "format": "date-time"},
+        "model": {"type": "string", "maxLength": 60},
+        "os": {"type": "string", "maxLength": 20}
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["s", "i", "k", "x", "y", "w", "h"],
+      "properties": {
+        "s": {"type": "string", "minLength": 1, "maxLength": 200},
+        "i": {"type": "integer", "minimum": 0, "maximum": 9999},
+        "k": {"enum": ["button", "link", "input", "choice", "tab", "cell", "image", "media", "web", "text", "other", "container"]},
+        "x": {"type": "integer", "minimum": 0, "maximum": 20000},
+        "y": {"type": "integer", "minimum": 0, "maximum": 20000},
+        "w": {"type": "integer", "minimum": 0, "maximum": 20000},
+        "h": {"type": "integer", "minimum": 0, "maximum": 20000},
+        "l": {"type": "string", "maxLength": 80},
+        "m": {"enum": [0, 1]}
+      },
+      "if": {"properties": {"m": {"const": 1}}, "required": ["m"]},
+      "then": {"not": {"required": ["l"]}}
+    },
+    "tree": {
+      "type": "object",
+      "required": ["v", "nodes"],
+      "properties": {
+        "v": {"const": 1},
+        "nodes": {"type": "array", "maxItems": 2000, "items": {"$ref": "#/$defs/node"}}
+      }
+    }
+  }
+}

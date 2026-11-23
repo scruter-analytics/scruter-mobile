@@ -1,0 +1,23 @@
+{
+  "description": "The configuration of the conformance app asked by a macOS app (p=macos): the same answer as iOS.",
+  "schema": "config",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/m/v1/config?a={{APP}}&p=macos&av=2.3.0&sv=1.0.0"
+      },
+      "expect": {
+        "status": 200,
+        "json_subset": {
+          "v": 1,
+          "on": 1,
+          "tz": "Europe/Paris",
+          "aa": 100,
+          "cr": 1
+        }
+      }
+    }
+  ]
+}

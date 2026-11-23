@@ -1,0 +1,34 @@
+{
+  "description": "SKAdNetwork 2.2 (Apple's example; no did-win before 3.0: a 2.x copy is a win).",
+  "schema": null,
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/.well-known/skadnetwork/report-attribution/",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "version": "2.2",
+          "ad-network-id": "com.example",
+          "campaign-id": 42,
+          "transaction-id": "6aafb7a5-0170-41b5-bbe4-fe71dedf1e28",
+          "app-id": 525463029,
+          "attribution-signature": "MEYCIQDTuQ1Z4Tpy9D3aEKbxLl5J5iKiTumcqZikuY/AOD2U7QIhAJAaiAv89AoquHXJffcieEQXdWHpcV8ZgbKN0EwV9/sY",
+          "redownload": true,
+          "source-app-id": 1234567891,
+          "fidelity-type": 1,
+          "conversion-value": 20
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    }
+  ],
+  "stored": {
+    "skan_postbacks": 1
+  }
+}

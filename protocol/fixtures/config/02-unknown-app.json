@@ -1,0 +1,22 @@
+{
+  "description": "An unknown app: collection off, asked again in five minutes.",
+  "schema": "config",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/m/v1/config?a=NOSUCHAPP99&p=ios&av=1.0&sv=1.0.0"
+      },
+      "expect": {
+        "status": 200,
+        "json": {
+          "v": 1,
+          "on": 0,
+          "e": "0",
+          "ttl": 300
+        }
+      }
+    }
+  ]
+}

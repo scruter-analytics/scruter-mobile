@@ -1,0 +1,122 @@
+{
+  "description": "An iOS app running on a Mac (Mac Catalyst): platform macos, form desktop, the Mac's hw.model, the bundle id maccatalyst. + the app's iOS bundle ID (accepted for macos with the macOS and the iOS bundle IDs). It keeps the iOS version it reads in `os` (named iOS) and the iOS install sources (app_store). Accepted and stored.",
+  "schema": "batch",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH}}",
+          "t": "{{NOW}}",
+          "sdk": "ios/1.0.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 1,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 1,
+              "p": "macos",
+              "bid": "maccatalyst.fr.scruter.conformance",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "18.2",
+              "m": "MacBookPro18,3",
+              "f": "desktop",
+              "l": "fr",
+              "o": {
+                "k": "icon"
+              },
+              "c": {
+                "sv": 2,
+                "ev": 1,
+                "dur": 95,
+                "en": "Accueil",
+                "ex": "Fiche produit",
+                "rev": {
+                  "EUR": 3400
+                },
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-20000}}"
+              },
+              "ins": {
+                "src": "app_store"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Accueil",
+              "t": "{{NOW-110000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen_end",
+              "n": "Accueil",
+              "t": "{{NOW-60000}}",
+              "ms": 48000,
+              "sc": 60
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Fiche produit",
+              "t": "{{NOW-59000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "event",
+              "n": "Ajout au panier",
+              "t": "{{NOW-30000}}",
+              "p": {
+                "coloris": "bleu",
+                "quantite": 2
+              },
+              "$": {
+                "a": 34.0,
+                "c": "EUR"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    }
+  ],
+  "stored": {
+    "events_pageview": 2,
+    "events_engagement": 1,
+    "events_custom": 1,
+    "sessions_sum_sign": 1,
+    "session": {
+      "pageviews": 2,
+      "platform": "macos",
+      "device_model": "MacBook Pro (14-inch, 2021)",
+      "os": "iOS",
+      "os_version": "18.2",
+      "device": "desktop"
+    },
+    "installs": 1,
+    "install": {
+      "store": "app_store"
+    }
+  }
+}

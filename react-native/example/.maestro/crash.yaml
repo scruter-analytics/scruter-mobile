@@ -1,0 +1,16 @@
+# A fatal JavaScript error, in a release build: the app dies.
+appId: net.scruter.rnexample
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "open_settings"
+    timeout: 30000
+- tapOn:
+    id: "open_settings"
+- extendedWaitUntil:
+    visible:
+      id: "crash_js"
+    timeout: 15000
+- tapOn:
+    id: "crash_js"

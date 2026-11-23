@@ -1,0 +1,118 @@
+{
+  "description": "A React Native app's iOS build running on an Apple silicon Mac (the Swift sources inside send macos too): sdk react_native/…, platform macos, form desktop, the app's own iOS bundle ID, a TestFlight install. Accepted and stored; an unknown Mac identifier is kept as sent.",
+  "schema": "batch",
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "v": 1,
+          "a": "{{APP}}",
+          "b": "{{BATCH}}",
+          "t": "{{NOW}}",
+          "sdk": "react_native/1.1.0",
+          "ce": "",
+          "dbg": 0,
+          "s": [
+            {
+              "id": "{{SESSION}}",
+              "d": "{{DAILY}}",
+              "q": 1,
+              "st": "{{NOW-120000}}",
+              "i": "{{TODAY}}",
+              "n": 1,
+              "p": "macos",
+              "bid": "fr.scruter.conformance",
+              "av": "2.3.0",
+              "ab": "230",
+              "bk": "release",
+              "tm": 0,
+              "os": "18.2",
+              "m": "Mac99,9",
+              "f": "desktop",
+              "l": "fr",
+              "o": {
+                "k": "icon"
+              },
+              "c": {
+                "sv": 2,
+                "ev": 1,
+                "dur": 95,
+                "en": "Accueil",
+                "ex": "Fiche produit",
+                "rev": {
+                  "EUR": 3400
+                },
+                "cr": 0,
+                "anr": 0,
+                "last": "{{NOW-20000}}"
+              },
+              "ins": {
+                "src": "testflight"
+              }
+            }
+          ],
+          "e": [
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Accueil",
+              "t": "{{NOW-110000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen_end",
+              "n": "Accueil",
+              "t": "{{NOW-60000}}",
+              "ms": 48000,
+              "sc": 60
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "screen",
+              "n": "Fiche produit",
+              "t": "{{NOW-59000}}"
+            },
+            {
+              "s": "{{SESSION}}",
+              "k": "event",
+              "n": "Ajout au panier",
+              "t": "{{NOW-30000}}",
+              "p": {
+                "coloris": "bleu",
+                "quantite": 2
+              },
+              "$": {
+                "a": 34.0,
+                "c": "EUR"
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "json": {}
+      }
+    }
+  ],
+  "stored": {
+    "events_pageview": 2,
+    "sessions_sum_sign": 1,
+    "session": {
+      "platform": "macos",
+      "device_model": "Mac99,9",
+      "os": "iOS",
+      "device": "desktop",
+      "sdk_version": "react_native/1.1.0"
+    },
+    "install": {
+      "store": "testflight"
+    }
+  }
+}

@@ -1,0 +1,226 @@
+# The Flutter SDK: analyze, widget tests, conformance, upload_symbols; the Android and iOS builds, the size budget; the
+# example's self-check on an Android emulator (debug and release) and an iOS simulator, against a local server that
+# validates every payload.
+name: Flutter
+
+on:
+  push:
+    paths: ["flutter/**", "protocol/**", "android/**", "ios/**", "Scruter.podspec", "Package.swift", ".github/workflows/flutter.yml"]
+  pull_request:
+    paths: ["flutter/**", "protocol/**", "android/**", "ios/**", "Scruter.podspec", "Package.swift", ".github/workflows/flutter.yml"]
+  workflow_dispatch:
+  workflow_call: # the checks of publish.yml
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_MIN: "3.22.3"
+
+jobs:
+  dart:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        flutter: ["3.22.3", "stable"]
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ matrix.flutter != 'stable' && matrix.flutter || '' }}
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos lib bin test
+      - name: Widget tests
+        run: flutter test --reporter=compact
+      - name: Payloads against the protocol schemas
+        run: scripts/conformance.sh
+      - name: Package validation
+        if: matrix.flutter == 'stable'
+        run: dart pub publish --dry-run || true
+
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    needs: dart
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_MIN }}
+          channel: stable
+          cache: true
+      - name: The Android SDK, in the staging repository the example reads
+        working-directory: android
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository
+      - name: The bridge (Robolectric)
+        working-directory: android
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:testDebugUnitTest --tests 'net.scruter.internal.WrapperTest'
+      - name: Debug and release builds
+        working-directory: flutter/example
+        run: |
+          flutter build apk --debug --target-platform android-x64
+          flutter build apk --release --split-debug-info=build/symbols --target-platform android-arm64
+      - name: Size budget
+        working-directory: flutter
+        run: scripts/budget.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-builds
+          path: |
+            flutter/example/build/app/outputs/flutter-apk/*.apk
+            flutter/build/budget.txt
+          retention-days: 3
+
+  android-device:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    needs: android
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [24, 34]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_MIN }}
+          channel: stable
+          cache: true
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: The Android SDK
+        working-directory: android
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishReleasePublicationToStagingRepository
+      - name: Self-check builds
+        working-directory: flutter/example
+        run: |
+          defines="--dart-define=SCRUTER_SELF_CHECK=true --dart-define=SCRUTER_ENDPOINT=http://10.0.2.2:8787"
+          flutter build apk --debug --target-platform android-x64 $defines
+          cp build/app/outputs/flutter-apk/app-debug.apk /tmp/check-debug.apk
+          flutter build apk --release --target-platform android-x64 $defines
+          cp build/app/outputs/flutter-apk/app-release.apk /tmp/check-release.apk
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: default
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          working-directory: flutter
+          script: |
+            node scripts/device-check.mjs android debug /tmp/check-debug.apk
+            node scripts/device-check.mjs android release /tmp/check-release.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-check-${{ matrix.api-level }}
+          path: flutter/build/device-check/
+          retention-days: 7
+
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 60
+    needs: dart
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_MIN }}
+          channel: stable
+          cache: true
+      # The pod carries the iOS SDK's sources: no pod of the CocoaPods trunk (docs/MOBILE.md §3 « Distribution »).
+      - name: The iOS sources in the plugin
+        run: flutter/scripts/sync-ios-sources.sh
+      - name: Release build (AOT, no signing)
+        working-directory: flutter/example
+        run: flutter build ios --release --no-codesign --split-debug-info=build/symbols
+      - name: The symbols carry a build id
+        working-directory: flutter/example
+        run: |
+          ls -la build/symbols
+          file build/symbols/*
+          dart run scruter_flutter:upload_symbols --dry-run
+          dwarfdump --uuid build/ios/iphoneos/Runner.app/Frameworks/App.framework/App
+      - name: Simulator
+        id: sim
+        run: |
+          udid=$(xcrun simctl list devices available -j | node -e "
+            const d=JSON.parse(require('fs').readFileSync(0)).devices;
+            const k=Object.keys(d).filter(x=>x.includes('iOS')).sort().pop();
+            console.log(d[k].find(x=>x.name.startsWith('iPhone')).udid)")
+          xcrun simctl boot "$udid"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+      - name: Self-check on the simulator
+        working-directory: flutter
+        run: |
+          (cd example && flutter build ios --debug --simulator \
+            --dart-define=SCRUTER_SELF_CHECK=true --dart-define=SCRUTER_ENDPOINT=http://127.0.0.1:8787)
+          node scripts/device-check.mjs ios debug example/build/ios/iphonesimulator/Runner.app "${{ steps.sim.outputs.udid }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-check
+          path: flutter/build/device-check/
+          retention-days: 7
+
+  ios-spm:
+    runs-on: macos-15
+    timeout-minutes: 45
+    needs: dart
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: The iOS sources in the plugin, as a published package holds them
+        run: flutter/scripts/sync-ios-sources.sh
+      # In a directory named after the package, as in pub's cache: Swift Package Manager derives identities from it.
+      - name: The plugin through Swift Package Manager
+        env:
+          SCRUTER_SDK_PATH: ${{ github.workspace }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/w"
+          cp -R flutter "$RUNNER_TEMP/w/scruter_flutter"
+          cd "$RUNNER_TEMP/w/scruter_flutter/example"
+          flutter config --enable-swift-package-manager
+          flutter build ios --debug --simulator
+          flutter build ios --release --no-codesign --split-debug-info=build/symbols
+          file build/symbols/*
+          dart run scruter_flutter:upload_symbols --dry-run
+          dwarfdump --uuid build/ios/iphoneos/Runner.app/Frameworks/App.framework/App

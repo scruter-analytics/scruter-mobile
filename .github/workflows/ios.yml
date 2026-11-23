@@ -1,0 +1,107 @@
+# The iOS SDK: core tests (macOS host), the SDK and its tests on an iOS simulator, the example app's tests (UIKit,
+# SwiftUI, captures, crash handler), the protocol's conformance, `pod lib lint`, and the binary size budget.
+name: ios
+
+on:
+  push:
+    branches: ["main", "wip/**"]
+    paths: ["ios/**", "Package.swift", "Scruter.podspec", "protocol/**", ".github/workflows/ios.yml"]
+  pull_request:
+    paths: ["ios/**", "Package.swift", "Scruter.podspec", "protocol/**", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+  workflow_call: # the checks of publish.yml
+
+# `github.workflow` is the caller's when called: a push to the same ref must not cancel the checks of a publication.
+concurrency:
+  group: ios-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  XCODEGEN_VERSION: "2.42.0"
+  XCODEGEN_SHA256: "1b677f04a4239e90c5b4a1b2ed0d5eefaf5afab2f012af6dacef6d4d3a53ccba"
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          node --version
+
+      - name: Binary size (what the SDK adds to an app)
+        run: SCRUTER_SIZE_DETAIL="$PWD/.build/batches" ios/scripts/size.sh
+
+      - name: Core tests (macOS host) and conformance
+        run: |
+          SCRUTER_BATCH_OUT="$PWD/.build/batches" swift test -j 3
+          ios/scripts/conformance.sh
+
+      - name: Crash handlers (real crashes on the macOS host)
+        timeout-minutes: 3
+        run: ios/scripts/test-crash-handler.sh
+
+      - name: Simulator
+        id: sim
+        run: |
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          d = json.load(sys.stdin)["devices"]
+          best = None
+          for rt, devs in d.items():
+              if "iOS" not in rt: continue
+              for x in devs:
+                  if x["name"].startswith("iPhone") and (best is None or rt > best[0]):
+                      best = (rt, x["udid"])
+          print(best[1])')
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$udid" || true
+
+      - name: SDK tests on the iOS simulator (Swift Package Manager)
+        run: |
+          xcodebuild test -scheme ScruterAnalytics -destination "id=${{ steps.sim.outputs.udid }}" \
+            -skipPackagePluginValidation -quiet
+
+      - name: Example app tests (UIKit, SwiftUI, captures, crash handler)
+        run: |
+          curl -fsSL -o /tmp/xcodegen.zip \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.artifactbundle.zip"
+          echo "$XCODEGEN_SHA256  /tmp/xcodegen.zip" | shasum -a 256 -c -
+          unzip -q /tmp/xcodegen.zip -d /tmp/xcodegen
+          gen=$(find /tmp/xcodegen -type f -name xcodegen -perm -u+x | head -1)
+          (cd ios/Example && "$gen" generate --quiet)
+          rm -rf .build/batches
+          TEST_RUNNER_SCRUTER_BATCH_OUT="$PWD/.build/batches" xcodebuild test \
+            -project ios/Example/ScruterExample.xcodeproj -scheme ScruterExample \
+            -destination "id=${{ steps.sim.outputs.udid }}" > /tmp/example-tests.log 2>&1 || status=$?
+          grep -E 'error:|\*\* TEST|\[budget\]|Executed .* tests' /tmp/example-tests.log | tail -40
+          grep '\[budget\]' /tmp/example-tests.log >> "$GITHUB_STEP_SUMMARY" || true
+          [ "${status:-0}" = 0 ]
+          ios/scripts/conformance.sh
+
+      - name: upload-symbols (Xcode build phase) against a fake server
+        timeout-minutes: 3
+        run: ios/scripts/test-upload-symbols.sh
+
+      - name: pod lib lint
+        run: pod lib lint Scruter.podspec --platforms=ios --skip-tests --allow-warnings --fail-fast
+
+      - name: Example screen images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-captures
+          path: .build/batches
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,230 @@
+# The React Native SDK: Jest, the conformance kit and the budget; the example's release build on every architecture and
+# on the oldest and latest React Native, on an Android emulator and an iOS simulator; Expo's config plugin.
+name: react-native
+
+on:
+  push:
+    branches: ["main", "wip/**"]
+    paths: ["react-native/**", "ios/Sources/**", "android/scruter-android/**", "Scruter.podspec", "protocol/**", ".github/workflows/react-native.yml"]
+  pull_request:
+    paths: ["react-native/**", "ios/Sources/**", "android/scruter-android/**", "Scruter.podspec", "protocol/**", ".github/workflows/react-native.yml"]
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: react-native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  MAESTRO_VERSION: "2.12.1"
+  MAESTRO_CLI_NO_ANALYTICS: "1"
+
+jobs:
+  js:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: react-native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci --no-audit --no-fund
+      - name: Types
+        run: npm run typecheck
+      - name: Jest (JavaScript layer, CLI, plugin; conformance against ../protocol)
+        run: npm test
+      - name: Budget (≤ 30 KB, min + gzip)
+        run: npm run budget
+      - name: The package
+        run: npm pack --dry-run
+
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { rn: "0.73.11", arch: old, helper: "" }
+          - { rn: "0.73.11", arch: new, helper: "--metro-helper" }
+          - { rn: "0.81.6", arch: old, helper: "" }
+          - { rn: "0.86.0", arch: new, helper: "" }
+          - { rn: "0.88.1", arch: new, helper: "--metro-helper" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: The Android SDK in the local Maven repository
+        working-directory: android
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishToMavenLocal
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: The example for this version
+        working-directory: react-native/example
+        run: node setup.mjs --rn ${{ matrix.rn }} --arch ${{ matrix.arch }} --check ${{ matrix.helper }}
+      - name: Unit tests of the native module
+        working-directory: react-native/example/android
+        run: ./gradlew --no-daemon --max-workers=3 :scruter_react-native:testDebugUnitTest
+      - name: Release build (Hermes, R8)
+        working-directory: react-native/example/android
+        env:
+          ORG_GRADLE_PROJECT_reactNativeArchitectures: x86_64
+        run: ./gradlew --no-daemon --max-workers=3 :app:assembleRelease
+      - name: Size of the native layer
+        run: |
+          apk=react-native/example/android/app/build/outputs/apk/release/app-release.apk
+          ls -l "$apk"
+      - name: Maestro
+        run: |
+          curl -fsSL -o /tmp/maestro.zip "https://github.com/mobile-dev-inc/maestro/releases/download/cli-$MAESTRO_VERSION/maestro.zip"
+          unzip -q /tmp/maestro.zip -d "$HOME"
+          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: default
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          working-directory: react-native
+          script: node scripts/device-check.mjs android example/android/app/build/outputs/apk/release/app-release.apk ${{ matrix.helper && '--helper' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-${{ matrix.rn }}-${{ matrix.arch }}
+          path: react-native/build/device-check
+          retention-days: 7
+
+  ios:
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { rn: "0.73.11", arch: old, helper: "", os: macos-15, xcode: "16.4" }
+          - { rn: "0.73.11", arch: new, helper: "--metro-helper", os: macos-15, xcode: "16.4" }
+          - { rn: "0.81.6", arch: old, helper: "", os: macos-15, xcode: "16.4" }
+          - { rn: "0.86.0", arch: new, helper: "", os: macos-15, xcode: "16.4" }
+          - { rn: "0.88.1", arch: new, helper: "--metro-helper", os: macos-15, xcode: "16.4" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Toolchain
+        run: |
+          ls -d /Applications/Xcode*
+          sudo xcode-select -s "/Applications/Xcode_${{ matrix.xcode }}.app"
+          xcodebuild -version
+      - name: The example for this version
+        working-directory: react-native/example
+        run: node setup.mjs --rn ${{ matrix.rn }} --arch ${{ matrix.arch }} --check ${{ matrix.helper }}
+      - name: Pods
+        working-directory: react-native/example/ios
+        env:
+          RCT_NEW_ARCH_ENABLED: ${{ matrix.arch == 'new' && '1' || '0' }}
+        run: pod install
+      - name: Release build for the simulator
+        id: build
+        working-directory: react-native/example/ios
+        run: |
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          d = json.load(sys.stdin)["devices"]
+          best = None
+          for rt, devs in d.items():
+              if "iOS" not in rt: continue
+              for x in devs:
+                  if x["name"].startswith("iPhone"):
+                      if best is None or rt > best[0]: best = (rt, x["udid"])
+          print(best[1])')
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          SOURCEMAP_FILE="$PWD/../main.jsbundle.map" xcodebuild -workspace ScruterExample.xcworkspace -scheme ScruterExample \
+            -configuration Release -destination "id=$udid" -derivedDataPath build CODE_SIGN_IDENTITY=- \
+            -quiet build
+      - name: Maestro
+        run: |
+          curl -fsSL -o /tmp/maestro.zip "https://github.com/mobile-dev-inc/maestro/releases/download/cli-$MAESTRO_VERSION/maestro.zip"
+          unzip -q /tmp/maestro.zip -d "$HOME"
+          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
+      - name: Device check
+        working-directory: react-native
+        run: |
+          xcrun simctl boot "${{ steps.build.outputs.udid }}"
+          xcrun simctl bootstatus "${{ steps.build.outputs.udid }}" -b
+          node scripts/device-check.mjs ios example/ios/build/Build/Products/Release-iphonesimulator/ScruterExample.app ${{ matrix.helper && '--helper' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-${{ matrix.rn }}-${{ matrix.arch }}
+          path: react-native/build/device-check
+          retention-days: 7
+
+  expo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: ["57", "58"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: The Android SDK in the local Maven repository
+        working-directory: android
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:publishToMavenLocal
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: An Expo app, its plugin, no native edit
+        run: react-native/scripts/expo-check.sh android ${{ matrix.sdk }}
+
+  expo-ios:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Expo's own Swift packages need Xcode 26.
+      - name: Toolchain
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - name: An Expo app, its plugin, pod install from npm alone
+        run: react-native/scripts/expo-check.sh ios 57

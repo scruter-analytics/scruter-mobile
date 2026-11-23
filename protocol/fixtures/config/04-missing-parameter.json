@@ -1,0 +1,17 @@
+{
+  "description": "No platform: 400.",
+  "schema": null,
+  "valid": false,
+  "steps": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/m/v1/config?a={{APP}}"
+      },
+      "expect": {
+        "status": 400,
+        "error_code": "invalid_payload"
+      }
+    }
+  ]
+}

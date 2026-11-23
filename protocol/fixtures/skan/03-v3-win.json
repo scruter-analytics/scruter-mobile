@@ -1,0 +1,35 @@
+{
+  "description": "SKAdNetwork 3.0 winning postback (Apple's example).",
+  "schema": null,
+  "valid": true,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/.well-known/skadnetwork/report-attribution/",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "version": "3.0",
+          "ad-network-id": "example123.skadnetwork",
+          "campaign-id": 42,
+          "transaction-id": "6aafb7a5-0170-41b5-bbe4-fe71dedf1e28",
+          "app-id": 525463029,
+          "attribution-signature": "MEYCIQD5eq3AUlamORiGovqFiHWI4RZT/PrM3VEiXUrsC+M51wIhAPMANZA9c07raZJ64gVaXhB9+9yZj/X6DcNxONdccQij",
+          "redownload": true,
+          "source-app-id": 1234567891,
+          "fidelity-type": 1,
+          "conversion-value": 20,
+          "did-win": true
+        }
+      },
+      "expect": {
+        "status": 200
+      }
+    }
+  ],
+  "stored": {
+    "skan_postbacks": 1
+  }
+}

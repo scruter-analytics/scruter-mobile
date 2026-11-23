@@ -1,0 +1,2 @@
+# Made by scripts/sync-ios-sources.sh; .pubignore keeps it in the published package.
+vendor/

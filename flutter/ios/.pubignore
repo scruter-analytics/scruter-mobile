@@ -1,0 +1,2 @@
+# Published on purpose: ios/vendor holds the iOS SDK's sources (scripts/sync-ios-sources.sh). This file replaces
+# .gitignore for pub in this directory.

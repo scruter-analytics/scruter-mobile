@@ -1,0 +1,22 @@
+{
+  "description": "A body that is not JSON.",
+  "schema": "batch",
+  "valid": false,
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/m/v1/batch",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "raw": "ceci n'est pas du JSON"
+      },
+      "expect": {
+        "status": 400,
+        "error_code": "invalid_payload"
+      }
+    }
+  ],
+  "stored": {}
+}

@@ -1,0 +1,82 @@
+name: Android
+
+on:
+  push:
+    paths: ["android/**", "protocol/**", ".github/workflows/android.yml"]
+  pull_request:
+    paths: ["android/**", "protocol/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+  workflow_call: # the checks of publish.yml
+
+permissions:
+  contents: read
+
+jobs:
+  sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Unit, Robolectric and Compose tests, lint
+        run: ./gradlew --no-daemon --max-workers=3 :scruter-android:testDebugUnitTest :sample:testDebugUnitTest :scruter-android:lintDebug
+      - name: Payloads against the protocol schemas
+        run: scripts/conformance.sh
+      - name: R8 builds and budgets
+        run: ./gradlew --no-daemon --max-workers=3 :budget:checkBudgets :sample:assembleRelease
+      - name: Gradle plugin (unit tests, TestKit)
+        run: ./gradlew --no-daemon --max-workers=3 -p scruter-symbols-gradle-plugin test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: reports
+          path: |
+            android/**/build/reports/
+            android/**/build/test-results/
+          retention-days: 7
+
+  # The R8 release build on a real Android runtime: what Robolectric cannot show.
+  device:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [24, 34]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Release build of the sample
+        working-directory: android
+        run: ./gradlew --no-daemon --max-workers=3 :sample:assembleRelease -Pscruter.selfCheck=http://10.0.2.2:8787
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: default
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          working-directory: android
+          script: node scripts/device-check.mjs sample/build/outputs/apk/release/sample-release.apk

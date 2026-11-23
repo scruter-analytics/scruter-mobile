@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Scruter sample</string>
+    <string name="checkout">Checkout (Views form)</string>
+    <string name="compose_shop">Shop (Jetpack Compose)</string>
+    <string name="catalog">Catalog</string>
+    <string name="product">Product %1$d</string>
+    <string name="postal_code">Postal code</string>
+    <string name="email">E-mail</string>
+    <string name="password">Password</string>
+    <string name="terms">I accept the terms</string>
+    <string name="customer">Morgan Smith, 12 Workshop Street</string>
+    <string name="pay">Pay</string>
+    <string name="add_to_cart">Add to cart</string>
+    <string name="cart">Cart</string>
+</resources>

@@ -1,0 +1,7 @@
+.build/
+.swiftpm/
+*.xcodeproj/xcuserdata/
+DerivedData/
+ios/Example/*.xcodeproj/
+ios/Example/ScruterExample/Info.plist
+__pycache__/
